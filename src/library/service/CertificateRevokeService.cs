@@ -1,0 +1,155 @@
+﻿using log4net;
+
+using Notary.Configuration;
+using Notary.Contract;
+using Notary.Interface.Repository;
+using Notary.Interface.Service;
+
+using Org.BouncyCastle.Asn1.X509;
+using Org.BouncyCastle.Crypto.Operators;
+using Org.BouncyCastle.Math;
+using Org.BouncyCastle.OpenSsl;
+using Org.BouncyCastle.X509;
+using Org.BouncyCastle.X509.Extension;
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Notary.Service
+{
+    internal class CertificateRevokeService : EntityService<RevocatedCertificate>, ICertificateRevokeService
+    {
+        public CertificateRevokeService(
+            IRevocatedCertificateRepository revocatedCertificateRepo,
+            ICertificateAuthorityService caService,
+            ICertificateService certService,
+            ILog log,
+            NotaryConfiguration config
+        ) : base(revocatedCertificateRepo, log)
+        {
+            CertificateAuthority = caService;
+            Configuration = config;
+        }
+
+        public async Task<string> GenerateCrl(string caSlug)
+        {
+            var ca = await CertificateAuthority.GetAsync(caSlug);
+            var crlGen = new X509V2CrlGenerator();
+
+            var revocatedCerts = await GetRevocatedCertificates();
+            string signingPrivateKeyPath = $"{Configuration.RootDirectory}/{ca.Slug}/{Constants.KeyDirectoryPath}/{ca.IssuingThumbprint}.key.pem";
+            string certificatePath = $"{Configuration.RootDirectory}/{ca.Slug}/{Constants.CertificateDirectoryPath}/{ca.IssuingThumbprint}.cer";
+            var issuerKeyPair = CertificateMethods.LoadKeyPair(signingPrivateKeyPath, Configuration.ApplicationKey);
+            var signingCertificate = await CertificateMethods.LoadCertificate(certificatePath);
+
+            crlGen.SetIssuerDN(signingCertificate.SubjectDN);
+            crlGen.SetThisUpdate(DateTime.UtcNow);
+            crlGen.SetNextUpdate(DateTime.UtcNow.AddYears(1));
+
+            foreach (var cert in revocatedCerts)
+            {
+                var c = await GetAsync(cert.CertificateSlug);
+                const string certType = "issued";
+
+                string revokedCertPath = $"{Configuration.RootDirectory}/{certType}/{Constants.CertificateDirectoryPath}/{cert.Thumbprint}.cer";
+                X509Certificate certificate = await CertificateMethods.LoadCertificate(revokedCertPath);
+                certificate.CheckValidity();
+
+                int reason = -1;
+                switch (cert.Reason)
+                {
+                    case RevocationReason.Unspecified:
+                        reason = CrlReason.Unspecified;
+                        break;
+                    case RevocationReason.KeyCompromized:
+                        reason = CrlReason.KeyCompromise;
+                        break;
+                    case RevocationReason.CaCompromized:
+                        reason = CrlReason.CACompromise;
+                        break;
+                    case RevocationReason.AffiliationChanged:
+                        reason = CrlReason.AffiliationChanged;
+                        break;
+                    case RevocationReason.Superceded:
+                        reason = CrlReason.Superseded;
+                        break;
+                    case RevocationReason.CessationOfOperation:
+                        reason = CrlReason.CessationOfOperation;
+                        break;
+                    case RevocationReason.CertificateHold:
+                        reason = CrlReason.CertificateHold;
+                        break;
+                    case RevocationReason.RemoveFromCrl:
+                        reason = CrlReason.RemoveFromCrl;
+                        break;
+                    case RevocationReason.PrivilegeWithdrawn:
+                        reason = CrlReason.PrivilegeWithdrawn;
+                        break;
+                    case RevocationReason.AaCompromized:
+                        reason = CrlReason.AACompromise;
+                        break;
+                }
+
+                crlGen.AddCrlEntry(certificate.SerialNumber, cert.Created, reason);
+                crlGen.AddExtension(X509Extensions.CrlNumber, false, new CrlNumber(BigInteger.Arbitrary(16)));
+            }
+
+            var signatureFactory = new Asn1SignatureFactory("SHA256WithRSA", issuerKeyPair.Private);
+            crlGen.AddExtension(X509Extensions.AuthorityKeyIdentifier, false, new AuthorityKeyIdentifierStructure(signingCertificate));
+            var crl = crlGen.Generate(signatureFactory);
+            byte[] crlBinary = null;
+            using (var stream = new MemoryStream())
+            {
+                using (TextWriter tw = new StreamWriter(stream))
+                {
+                    var pw = new PemWriter(tw);
+                    pw.WriteObject(crl);
+                    await pw.Writer.FlushAsync();
+                }
+
+                crlBinary = stream.ToArray();
+            }
+
+            return Encoding.Default.GetString(crlBinary);
+        }
+
+        public async Task<List<RevocatedCertificate>> GetRevocatedCertificates()
+        {
+            var revocatedCerts = await Repository.GetAllAsync();
+
+            return revocatedCerts;
+        }
+
+        public async Task RevokeCertificateAsync(string slug, RevocationReason reason, string userRevocatingSlug)
+        {
+            var certificate = await CertificateService.GetAsync(slug);
+
+            if (certificate != null)
+            {
+                certificate.RevocationDate = DateTime.UtcNow;
+                await CertificateService.SaveAsync(certificate,userRevocatingSlug);
+                
+                var revocatedCertificate = new RevocatedCertificate
+                {
+                    Active = true,
+                    Created = DateTime.Now,
+                    CreatedBySlug = userRevocatingSlug,
+                    Reason = reason,
+                    SerialNumber = certificate.SerialNumber,
+                    Thumbprint = certificate.Thumbprint
+                };
+
+                await SaveAsync(revocatedCertificate, userRevocatingSlug);
+            }
+        }
+
+        protected ICertificateAuthorityService CertificateAuthority { get; }
+
+        protected ICertificateService CertificateService { get; }
+
+        protected NotaryConfiguration Configuration { get; }
+    }
+}

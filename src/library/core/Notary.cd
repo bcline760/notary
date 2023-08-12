@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Enum Name="Notary.KeyUsageFlags">
+    <Position X="3.5" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAgAAA=</HashCode>
+      <FileName>KeyUsageFlags.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="Notary.Algorithm">
+    <Position X="1.5" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAA=</HashCode>
+      <FileName>Algorithm.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="Notary.SanKind">
+    <Position X="1.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAACAAAAAAAACAAAAAAAAAAAAASAAAAAAAAAA=</HashCode>
+      <FileName>SanKind.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="Notary.CertificateFormat">
+    <Position X="3.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAACCACAAAAAAAAAAAAAAAAAAAAAAAgAAAA=</HashCode>
+      <FileName>CertificateFormat.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
