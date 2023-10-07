@@ -34,8 +34,6 @@ namespace Notary.Configuration
 
         public int HashLength { get; set; }
 
-        public NotaryOpenIdConfiguration OpenId { get; set; }
-
         public string Salt { get; set; }
 
         public int SaltIterations { get; set; }
