@@ -38,13 +38,6 @@ namespace Notary.Interface.Service
         AsymmetricCipherKeyPair GenerateKeyPair(SecureRandom random, int strength);
 
         /// <summary>
-        /// Generate a secure hash of a plaintext password using PBKDF
-        /// </summary>
-        /// <param name="plainText">The incoming</param>
-        /// <returns>The PBKDF hashed password</returns>
-        byte[] GeneratePasswordHash(string plainText);
-
-        /// <summary>
         /// Create a serial number used for certificate and other cryptography objects
         /// </summary>
         /// <returns>An integer value representing the serial number</returns>
@@ -94,12 +87,5 @@ namespace Notary.Interface.Service
         /// <param name="audience">The audience of the JWT</param>
         /// <returns>A set of claims or null if the token is invalid</returns>
         ClaimsPrincipal ValidateJwt(string token, string issuer, string audience);
-
-        /// <summary>
-        /// Verify the password to ash to see if it is a valid hash.
-        /// </summary>
-        /// <param name="passwordHash"></param>
-        /// <returns></returns>
-        bool VerifyPasswordHash(byte[] passwordHash);
     }
 }

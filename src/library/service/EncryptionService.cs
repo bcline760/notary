@@ -110,17 +110,6 @@ namespace Notary.Service
             return subjectKeyPair;
         }
 
-        public byte[] GeneratePasswordHash(string plainText)
-        {
-            byte[] hashedPwd;
-            byte[] salt = Encoding.UTF8.GetBytes(_config.Salt);
-            using (var rfc = new Rfc2898DeriveBytes(plainText, salt,_config.SaltIterations))
-            {
-                hashedPwd = rfc.GetBytes(_config.HashLength);
-            }
-            return hashedPwd;
-        }
-
         /// <summary>
         /// Generate a cryptographically secure random number
         /// </summary>
@@ -236,18 +225,6 @@ namespace Notary.Service
             }
 
             return null;
-        }
-
-        public bool VerifyPasswordHash(byte[] passwordHash)
-        {
-            byte[] hashedPwd;
-            byte[] saltBytes = Encoding.UTF8.GetBytes(_config.Salt);
-            using (var rfc = new Rfc2898DeriveBytes(passwordHash, saltBytes, _config.SaltIterations))
-            {
-                hashedPwd = rfc.GetBytes(_config.HashLength);
-            }
-
-            return hashedPwd.AreBytesEqual(passwordHash);
         }
 
         private byte[] LoadEncryptionKey()

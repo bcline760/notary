@@ -19,8 +19,6 @@ namespace Notary.Configuration
             Authentication = config.Authentication;
             Database = config.Database;
             HashLength = config.HashLength;
-            Salt = config.Salt;
-            SaltIterations = config.SaltIterations;
             TokenSettings = config.TokenSettings;
         }
 
@@ -33,10 +31,6 @@ namespace Notary.Configuration
         public NotaryDatabaseConfiguration Database { get; set; }
 
         public int HashLength { get; set; }
-
-        public string Salt { get; set; }
-
-        public int SaltIterations { get; set; }
 
         public string RootDirectory { get; set; }
 
