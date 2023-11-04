@@ -26,7 +26,7 @@ namespace Notary.Service
     {
         public CertificateService(
             NotaryConfiguration config,
-            Interface.Repository.ICertificateRepository repository,
+            ICertificateRepository repository,
             ICertificateAuthorityService certificateAuthorityService,
             ILog log) : base(repository, log)
         {

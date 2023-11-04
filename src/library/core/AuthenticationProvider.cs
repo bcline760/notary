@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Notary
+﻿namespace Notary
 {
     /// <summary>
     /// The types of authentication that is used with the system.

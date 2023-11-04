@@ -13,7 +13,7 @@ using Org.BouncyCastle.X509;
 
 namespace Notary.Service
 {
-    internal class CertificateAuthorityService : EntityService<CertificateAuthority>, ICertificateAuthorityService
+    public class CertificateAuthorityService : EntityService<CertificateAuthority>, ICertificateAuthorityService
     {
         public CertificateAuthorityService(
             ICertificateAuthorityRepository repo,

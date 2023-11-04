@@ -1,25 +1,32 @@
 using Notary.Interface.Service;
 using Notary.Contract;
+using Notary.Interface.Repository;
 
 namespace Notary.Test;
 
 public class CertificateServiceTest
 {
-    private Mock<ICertificateService> _svc = null;
+    private Mock<ICertificateRepository> _certificateRepo;
+    private Mock<ICertificateAuthorityService> _caService;
 
     public CertificateServiceTest()
     {
-        _svc = new Mock<ICertificateService>();
+        _certificateRepo = new Mock<ICertificateRepository>();
+        _caService = new Mock<ICertificateAuthorityService>();
     }
 
     [SetUp]
-    public void SetupTest()
+    public async Task SetupTest()
     {
         var certificate = CreateCertificateMock();
+        var certificateList = new List<Certificate>
+        {
+            certificate
+        };
+        _certificateRepo.Setup(r => r.SaveAsync(certificate));
+        _certificateRepo.Setup(r => r.GetCertificatesByCaAsync(It.IsAny<string>())).ReturnsAsync(certificateList);
 
-        _svc.Setup(s => s.IssueCertificateAsync(MockRequest())).ReturnsAsync(certificate);
-        _svc.Setup(s => s.RequestCertificateAsync(It.IsAny<string>(), It.IsAny<CertificateFormat>(), It.IsAny<string>())).ReturnsAsync(It.IsAny<byte[]>());
-        _svc.Setup(s => s.SaveAsync(certificate, It.IsAny<string>()));
+        _caService.Setup(s => s.GetAsync(It.IsAny<string>())).ReturnsAsync(MockCa());
     }
 
     [Test]
@@ -70,6 +77,45 @@ public class CertificateServiceTest
             Thumbprint = It.IsAny<string>(),
             Updated = null,
             UpdatedBySlug = null
+        };
+    }
+
+    private CertificateAuthority MockCa()
+    {
+        return new CertificateAuthority
+        {
+            Active = true,
+            Created = DateTime.MinValue,
+            CreatedBySlug = It.IsAny<string>(),
+            DistinguishedName = new DistinguishedName
+            {
+                CommonName = It.IsAny<string>(),
+                Country = It.IsAny<string>(),
+                Locale = It.IsAny<string>(),
+                Organization = It.IsAny<string>(),
+                OrganizationalUnit = It.IsAny<string>(),
+                StateProvince = It.IsAny<string>()
+            },
+            IsIssuer = It.IsAny<bool>(),
+            IssuingDn = new DistinguishedName
+            {
+                CommonName = It.IsAny<string>(),
+                Country = It.IsAny<string>(),
+                Locale = It.IsAny<string>(),
+                Organization = It.IsAny<string>(),
+                OrganizationalUnit = It.IsAny<string>(),
+                StateProvince = It.IsAny<string>()
+            },
+            IssuingSerialNumber = It.IsAny<string>(),
+            IssuingThumbprint = It.IsAny<string>(),
+            KeyAlgorithm = It.IsAny<Algorithm>(),
+            KeyCurve = null,
+            KeyLength = It.IsAny<int>(),
+            Name = It.IsAny<string>(),
+            ParentCaSlug = It.IsAny<string>(),
+            Slug = It.IsAny<string>(),
+            Updated = null,
+            UpdatedBySlug = It.IsAny<string>()
         };
     }
 
