@@ -18,10 +18,12 @@ namespace Notary.Service
         public CertificateAuthorityService(
             ICertificateAuthorityRepository repo,
             ICertificateRepository certRepo,
+            IEncryptionService encService,
             NotaryConfiguration config, ILog log) : base(repo, log)
         {
             Configuration = config;
             CertificateRepository = certRepo;
+            EncryptionService = encService;
         }
 
         public async Task SetupCertificateAuthority(CertificateAuthoritySetup setup)
@@ -37,9 +39,9 @@ namespace Notary.Service
                 parentCa = await Repository.GetAsync(setup.ParentCaSlug);
 
             var now = DateTime.UtcNow;
-            var randomRoot = CertificateMethods.GetSecureRandom();
-            var serialNum = CertificateMethods.GenerateSerialNumber(randomRoot);
-            var keyPair = CertificateMethods.GenerateKeyPair(randomRoot, setup.Algorithm, setup.Curve, setup.KeyLength);
+            var randomRoot = EncryptionService.GetSecureRandom();
+            var serialNum = EncryptionService.GenerateSerialNumber(randomRoot);
+            var keyPair = EncryptionService.GenerateKeyPair(randomRoot, setup.Algorithm, setup.Curve, setup.KeyLength);
 
             DistinguishedName issuerDn = null;
             var dn = new DistinguishedName
@@ -68,7 +70,7 @@ namespace Notary.Service
             X509Certificate caCertificate = null;
             try
             {
-                caCertificate = CertificateMethods.GenerateCertificate(
+                caCertificate = EncryptionService.GenerateCertificate(
                     new List<SubjectAlternativeName>(),
                     randomRoot,
                     setup.Algorithm,
@@ -85,7 +87,7 @@ namespace Notary.Service
                         KeyPurposeID.IdKPCodeSigning
                     });
 
-                var thumb = CertificateMethods.GetThumbprint(caCertificate);
+                var thumb = EncryptionService.GetThumbprint(caCertificate);
 
                 short keyUsageBits = (short)KeyPurposeFlags.CodeSigning;
                 var ca = new CertificateAuthority
@@ -111,11 +113,11 @@ namespace Notary.Service
 
                 string keyPath = $"{path}/keys/{thumb}.key.pem";
                 System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(keyPath));
-                CertificateMethods.SavePrivateKey(keyPair, keyPath, randomRoot, Configuration.ApplicationKey);
+                EncryptionService.SavePrivateKey(keyPair, keyPath, randomRoot, Configuration.ApplicationKey);
 
                 string certPath = $"{path}/{Constants.CertificateDirectoryPath}/{thumb}.cer";
                 System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(certPath));
-                CertificateMethods.SaveCertificate(caCertificate, certPath);
+                await EncryptionService.SaveCertificateAsync(caCertificate, certPath);
 
                 var caCert = new Certificate
                 {
@@ -202,5 +204,7 @@ namespace Notary.Service
         protected ICertificateRevokeService CertificateRevokeService { get; }
 
         protected ICertificateRepository CertificateRepository { get; }
+
+        protected IEncryptionService EncryptionService { get; }
     }
 }

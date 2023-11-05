@@ -9,6 +9,7 @@ public class CertificateAuthorityServiceTest : NotaryTest
 {
     private Mock<ICertificateAuthorityRepository> _caRepo;
     private Mock<ICertificateRepository> _certificateRepo;
+    private Mock<IEncryptionService> _encryptionService;
     private Mock<ILog> _log;
     private CertificateAuthorityService _service = null;
 
@@ -16,6 +17,7 @@ public class CertificateAuthorityServiceTest : NotaryTest
     {
         _caRepo = new Mock<ICertificateAuthorityRepository>();
         _certificateRepo = new Mock<ICertificateRepository>();
+        _encryptionService = new Mock<IEncryptionService>();
         _log = new Mock<ILog>();
     }
 
@@ -43,6 +45,7 @@ public class CertificateAuthorityServiceTest : NotaryTest
         _service = new CertificateAuthorityService(
             _caRepo.Object,
             _certificateRepo.Object,
+            _encryptionService.Object,
             config,
             _log.Object
         );
@@ -67,6 +70,29 @@ public class CertificateAuthorityServiceTest : NotaryTest
         Assert.That(actual.Count > 0, "The actual is empty");
         Assert.That(expected.Count == actual.Count, "Count differs between actual and expected.");
         Assert.That(expected[0].Slug == actual[0].Slug);
+    }
+
+    [Test]
+    public async Task GetCaListBriefTest()
+    {
+        var ca = MockCa();
+        var caBrief = new CaBrief
+        {
+            Certificates = 0,
+            CreatedBy = ca.CreatedBySlug,
+            CreatedOn = ca.Created.ToString(),
+            Name = ca.Name,
+            ParentName = "string",
+            Slug = ca.Slug
+        };
+
+        var expected = new List<CaBrief>() { caBrief };
+        var actual = await _service.GetCaListBrief();
+
+        Assert.That(actual != null, "Actual returned null");
+        Assert.That(actual.Count > 0, "Actual returned empty");
+        Assert.That(actual.Count == expected.Count, "Actual and expected counts differ");
+        Assert.That(actual[0].Slug == expected[0].Slug, "Slugs do not match");
     }
 
     private CertificateAuthority MockCa()
