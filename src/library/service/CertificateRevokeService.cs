@@ -25,13 +25,16 @@ namespace Notary.Service
         public CertificateRevokeService(
             IRevocatedCertificateRepository revocatedCertificateRepo,
             ICertificateAuthorityService caService,
-            ICertificateService certService,
+            ICertificateService certificateService,
+            IEncryptionService encService,
             ILog log,
             NotaryConfiguration config
         ) : base(revocatedCertificateRepo, log)
         {
             CertificateAuthority = caService;
+            CertificateService = certificateService;
             Configuration = config;
+            EncryptionService = encService;
         }
 
         public async Task<string> GenerateCrl(string caSlug)
@@ -42,8 +45,8 @@ namespace Notary.Service
             var revocatedCerts = await GetRevocatedCertificates();
             string signingPrivateKeyPath = $"{Configuration.RootDirectory}/{ca.Slug}/{Constants.KeyDirectoryPath}/{ca.IssuingThumbprint}.key.pem";
             string certificatePath = $"{Configuration.RootDirectory}/{ca.Slug}/{Constants.CertificateDirectoryPath}/{ca.IssuingThumbprint}.cer";
-            var issuerKeyPair = CertificateMethods.LoadKeyPair(signingPrivateKeyPath, Configuration.ApplicationKey);
-            var signingCertificate = await CertificateMethods.LoadCertificate(certificatePath);
+            var issuerKeyPair = EncryptionService.LoadKeyPair(signingPrivateKeyPath, Configuration.ApplicationKey);
+            var signingCertificate = await EncryptionService.LoadCertificateAsync(certificatePath);
 
             crlGen.SetIssuerDN(signingCertificate.SubjectDN);
             crlGen.SetThisUpdate(DateTime.UtcNow);
@@ -55,7 +58,7 @@ namespace Notary.Service
                 const string certType = "issued";
 
                 string revokedCertPath = $"{Configuration.RootDirectory}/{certType}/{Constants.CertificateDirectoryPath}/{cert.Thumbprint}.cer";
-                X509Certificate certificate = await CertificateMethods.LoadCertificate(revokedCertPath);
+                X509Certificate certificate = await EncryptionService.LoadCertificateAsync(revokedCertPath);
                 certificate.CheckValidity();
 
                 int reason = -1;
@@ -149,6 +152,8 @@ namespace Notary.Service
         protected ICertificateAuthorityService CertificateAuthority { get; }
 
         protected ICertificateService CertificateService { get; }
+
+        protected IEncryptionService EncryptionService { get; }
 
         protected NotaryConfiguration Configuration { get; }
     }

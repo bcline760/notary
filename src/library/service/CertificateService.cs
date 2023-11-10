@@ -26,12 +26,14 @@ namespace Notary.Service
     {
         public CertificateService(
             NotaryConfiguration config,
-            Interface.Repository.ICertificateRepository repository,
+            ICertificateRepository repository,
+            IEncryptionService encService,
             ICertificateAuthorityService certificateAuthorityService,
             ILog log) : base(repository, log)
         {
             Configuration = config;
             CertificateAuthority = certificateAuthorityService;
+            EncryptionService = encService;
         }
 
         public async Task<Certificate> IssueCertificateAsync(CertificateRequest request)
@@ -48,12 +50,12 @@ namespace Notary.Service
 
                 //Load the issuer's private key from the file system.
                 var keyPath = $"{path}/{Constants.KeyDirectoryPath}/{certificateAuthority.IssuingThumbprint}.key.pem";
-                var issuerKeyPair = CertificateMethods.LoadKeyPair(keyPath, Configuration.ApplicationKey);
+                var issuerKeyPair = EncryptionService.LoadKeyPair(keyPath, Configuration.ApplicationKey);
 
                 var issuerSn = new BigInteger(certificateAuthority.IssuingSerialNumber, 16);
-                var random = CertificateMethods.GetSecureRandom();
-                var certificateKeyPair = CertificateMethods.GenerateKeyPair(random, request.KeyAlgorithm, request.Curve, request.KeySize);
-                var serialNumber = CertificateMethods.GenerateSerialNumber(random);
+                var random = EncryptionService.GetSecureRandom();
+                var certificateKeyPair = EncryptionService.GenerateKeyPair(random, request.KeyAlgorithm, request.Curve, request.KeySize);
+                var serialNumber = EncryptionService.GenerateSerialNumber(random);
                 var subject = DistinguishedName.BuildDistinguishedName(request.Subject);
                 var notAfter = DateTime.UtcNow.AddHours(request.LengthInHours);
                 var issuerDn = DistinguishedName.BuildDistinguishedName(certificateAuthority.DistinguishedName);
@@ -84,7 +86,7 @@ namespace Notary.Service
                     keyUsages.Add(KeyPurposeID.IdKPTimeStamping);
 
                 //Generate the certificate
-                var generatedCertificate = CertificateMethods.GenerateCertificate(
+                var generatedCertificate = EncryptionService.GenerateCertificate(
                     request.SubjectAlternativeNames,
                     random,
                     request.KeyAlgorithm,
@@ -99,7 +101,7 @@ namespace Notary.Service
                     keyUsages.ToArray()
                 );
 
-                var thumbprint = CertificateMethods.GetThumbprint(generatedCertificate);
+                var thumbprint = EncryptionService.GetThumbprint(generatedCertificate);
                 var issuedKeyPath = $"{path}/{Constants.KeyDirectoryPath}/{thumbprint}.key.pem";
                 var issuedCertPath = $"{path}/{Constants.CertificateDirectoryPath}/{thumbprint}.cer";
 
@@ -128,8 +130,8 @@ namespace Notary.Service
                 await SaveAsync(certificate, request.RequestedBySlug);
 
                 //Save encrypted private key and certificate to the file system
-                CertificateMethods.SavePrivateKey(certificateKeyPair, issuedKeyPath, random, Configuration.ApplicationKey);
-                CertificateMethods.SaveCertificate(generatedCertificate, issuedCertPath);
+                EncryptionService.SavePrivateKey(certificateKeyPair, issuedKeyPath, random, Configuration.ApplicationKey);
+                await EncryptionService.SaveCertificateAsync(generatedCertificate, issuedCertPath);
 
                 return certificate;
             }
@@ -150,7 +152,7 @@ namespace Notary.Service
             byte[] certificateBinary = null;
 
             string certificatePath = $"{path}/{Constants.CertificateDirectoryPath}/{certificate.Thumbprint}.cer";
-            X509Certificate cert = await CertificateMethods.LoadCertificate(certificatePath);
+            X509Certificate cert = await EncryptionService.LoadCertificateAsync(certificatePath);
             if (cert == null)
                 return null;
             cert.CheckValidity();
@@ -175,7 +177,7 @@ namespace Notary.Service
                     break;
                 case CertificateFormat.Pkcs12:
                     var certKeyPath = $"{path}/{Constants.KeyDirectoryPath}/{certificate.Thumbprint}.key.pem";
-                    var certKey = CertificateMethods.LoadKeyPair(certKeyPath, Configuration.ApplicationKey);
+                    var certKey = EncryptionService.LoadKeyPair(certKeyPath, Configuration.ApplicationKey);
                     var store = new Pkcs12StoreBuilder().Build();
                     var certEntry = new X509CertificateEntry(cert);
                     var keyEntry = new AsymmetricKeyEntry(certKey.Private);
@@ -183,7 +185,7 @@ namespace Notary.Service
                     store.SetKeyEntry(certificate.Subject.ToString(), keyEntry, new X509CertificateEntry[] { certEntry });
                     using (var memStream = new MemoryStream())
                     {
-                        store.Save(memStream, privateKeyPassword.ToArray(), CertificateMethods.GetSecureRandom());
+                        store.Save(memStream, privateKeyPassword.ToArray(), EncryptionService.GetSecureRandom());
                         certificateBinary = memStream.ToArray();
                     }
                     break;
@@ -206,5 +208,7 @@ namespace Notary.Service
         protected NotaryConfiguration Configuration { get; }
 
         protected ICertificateAuthorityService CertificateAuthority { get; }
+
+        protected IEncryptionService EncryptionService { get; }
     }
 }
