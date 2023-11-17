@@ -9,14 +9,9 @@ namespace Notary.Api.Controllers
 {
     public class EncryptController : NotaryController
     {
-        public EncryptController(IEncryptionService encService, NotaryConfiguration config, ILog log):base(log) 
+        public EncryptController(IEncryptionService encService, NotaryConfiguration config, ILog log) : base(log)
         {
             Service = encService;
-        }
-
-        public async Task<IActionResult> Index()
-        {
-            return Ok();
         }
 
         protected IEncryptionService Service { get; set; }

@@ -181,7 +181,7 @@ namespace Notary.Api.Controllers
             TIn param1,
             TIn2 param2,
             TIn3 param3,
-            bool useHttpCreated=false)
+            bool useHttpCreated = false)
         {
             IActionResult result = null;
 
@@ -249,7 +249,7 @@ namespace Notary.Api.Controllers
             TIn param1,
             TIn2 param2,
             TIn3 param3,
-            bool useHttpCreated=false
+            bool useHttpCreated = false
         ) where TOut : class
         {
             IActionResult result = null;
@@ -276,41 +276,6 @@ namespace Notary.Api.Controllers
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Get an action result based on desired HTTP status code
-        /// </summary>
-        /// <typeparam name="TOut"></typeparam>
-        /// <param name="code">The kind of HTTP status code</param>
-        /// <param name="returnObject">The object to return if any. Set to object default if not desired</param>
-        /// <param name="context">Additional context such as a URL</param>
-        /// <returns>An HTTP action result with message and status code</returns>
-        private IActionResult GetHttpResponseCode<TOut>(HttpStatusCode code, TOut returnObject) where TOut : class
-        {
-            switch (code)
-            {
-                case HttpStatusCode.OK:
-                    return Ok(returnObject);
-                case HttpStatusCode.Created:
-                    return CreatedAtAction(Request.Path, returnObject);
-                case HttpStatusCode.Accepted:
-                    return Accepted(returnObject);
-                case HttpStatusCode.NoContent:
-                    return NoContent();
-                case HttpStatusCode.BadRequest:
-                    return BadRequest();
-                case HttpStatusCode.Unauthorized:
-                    return Unauthorized();
-                case HttpStatusCode.Forbidden:
-                    return Forbid();
-                case HttpStatusCode.NotFound:
-                    return NotFound();
-                case HttpStatusCode.Conflict:
-                    return Conflict(returnObject);
-                default:
-                    return StatusCode((int)code);
-            }
         }
     }
 }
