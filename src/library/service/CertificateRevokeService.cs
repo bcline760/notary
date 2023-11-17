@@ -45,7 +45,7 @@ namespace Notary.Service
             var revocatedCerts = await GetRevocatedCertificates();
             string signingPrivateKeyPath = $"{Configuration.RootDirectory}/{ca.Slug}/{Constants.KeyDirectoryPath}/{ca.IssuingThumbprint}.key.pem";
             string certificatePath = $"{Configuration.RootDirectory}/{ca.Slug}/{Constants.CertificateDirectoryPath}/{ca.IssuingThumbprint}.cer";
-            var issuerKeyPair = EncryptionService.LoadKeyPair(signingPrivateKeyPath, Configuration.ApplicationKey);
+            var issuerKeyPair = EncryptionService.LoadKeyPair(signingPrivateKeyPath, Configuration.ApplicationKey, ca.KeyAlgorithm);
             var signingCertificate = await EncryptionService.LoadCertificateAsync(certificatePath);
 
             crlGen.SetIssuerDN(signingCertificate.SubjectDN);

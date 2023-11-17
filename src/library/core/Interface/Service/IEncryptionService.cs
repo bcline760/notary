@@ -102,7 +102,7 @@ namespace Notary.Interface.Service
         /// <param name="filePath"></param>
         /// <param name="encryptionKey"></param>
         /// <returns></returns>
-        AsymmetricCipherKeyPair LoadKeyPair(string filePath, string encryptionKey);
+        AsymmetricCipherKeyPair LoadKeyPair(string filePath, string encryptionKey, Algorithm algorithm);
 
         /// <summary>
         /// Save the X.509 certificate to the file system

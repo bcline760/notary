@@ -1,39 +1,41 @@
 ﻿
 
+#region System Usings
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
+using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Text;
-using System.IO;
+using System.Threading.Tasks;
+#endregion
 
 using Microsoft.IdentityModel.Tokens;
-
 using log4net;
+
+#region Bouncy Castle Usings
+using Org.BouncyCastle.Asn1;
+using Org.BouncyCastle.Asn1.Nist;
+using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Crypto.Generators;
-using Org.BouncyCastle.Security;
-using Org.BouncyCastle.Math;
-using Org.BouncyCastle.Utilities;
-using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Crypto.Encodings;
-using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Crypto.Operators;
+using Org.BouncyCastle.Math;
+using Org.BouncyCastle.Math.EC;
+using Org.BouncyCastle.OpenSsl;
+using Org.BouncyCastle.Security;
+using Org.BouncyCastle.Utilities;
+using Org.BouncyCastle.Utilities.Encoders;
+using Org.BouncyCastle.X509;
+#endregion
 
 using Notary.Configuration;
 using Notary.Interface.Service;
 using Notary.Contract;
-using Org.BouncyCastle.Asn1.X509;
-using Org.BouncyCastle.X509;
-using System.Collections.Generic;
-using Org.BouncyCastle.Asn1;
-using Org.BouncyCastle.Asn1.Nist;
-using Org.BouncyCastle.Math.EC;
-using Org.BouncyCastle.Crypto.Operators;
-using Org.BouncyCastle.Crypto.Digests;
-using Org.BouncyCastle.Utilities.Encoders;
 
 namespace Notary.Service
 {
@@ -343,19 +345,29 @@ namespace Notary.Service
             return cert;
         }
 
-        public AsymmetricCipherKeyPair LoadKeyPair(string filePath, string encryptionKey)
+        public AsymmetricCipherKeyPair LoadKeyPair(string filePath, string encryptionKey, Algorithm algorithm)
         {
             using (FileStream fs = File.OpenRead(filePath))
             using (TextReader tr = new StreamReader(fs))
             {
                 PemReader pr = new PemReader(tr, new PasswordFinder(encryptionKey));
                 var pemObject = pr.ReadObject();
-                var privateKey = (RsaPrivateCrtKeyParameters)pemObject;
-                var publicKey = new RsaKeyParameters(false, privateKey.Modulus, privateKey.PublicExponent);
-                var keyPair = new AsymmetricCipherKeyPair(publicKey, privateKey);
 
-                return keyPair;
+                if (algorithm == Algorithm.RSA)
+                {
+                    var privateKey = (RsaPrivateCrtKeyParameters)pemObject;
+                    var publicKey = new RsaKeyParameters(false, privateKey.Modulus, privateKey.PublicExponent);
+                    var keyPair = new AsymmetricCipherKeyPair(publicKey, privateKey);
+
+                    return keyPair;
+                }
+                else if (algorithm == Algorithm.EllipticCurve)
+                {
+                    throw new NotImplementedException("Still figuring out how to read elliptic curve keys");
+                }
             }
+
+            throw new InvalidOperationException("This should never have occured in public AsymmetricCipherKeyPair LoadKeyPair(filePath, encryptionKey, algorithm)");
         }
 
         /// <summary>
@@ -384,7 +396,7 @@ namespace Notary.Service
 
             generator.Password = string.IsNullOrEmpty(pkPassword) ? _config.ApplicationKey.ToCharArray() : pkPassword.ToCharArray();
             generator.SecureRandom = encryptionRandom;
-            generator.IterationCount = 32;
+            generator.IterationCount = 32; // TODO: Remove magic number
 
             var pemObject = generator.Generate();
             using (FileStream fs = File.OpenWrite(filePath))
@@ -394,6 +406,11 @@ namespace Notary.Service
                 pemWriter.WriteObject(pemObject);
                 pemWriter.Writer.Flush();
             }
+        }
+
+        public byte[] Sign(string content, AsymmetricKey key)
+        {
+            throw new NotImplementedException("Coming soon!");
         }
 
         public ClaimsPrincipal ValidateJwt(string token, string issuer, string audience)

@@ -1,6 +1,5 @@
 ﻿using System.Net;
-using System.Threading.Tasks;
-using Azure;
+
 using log4net;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -11,7 +10,7 @@ using Notary.Logging;
 namespace Notary.Api.Controllers
 {
     [ApiController]
-    // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public abstract class NotaryController : ControllerBase
     {
         protected ILog Log { get; }
