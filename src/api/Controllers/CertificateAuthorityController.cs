@@ -35,16 +35,6 @@ namespace Notary.Api.Controllers
             return result;
         }
 
-        [Route("cacertlist"), HttpGet]
-        public async Task<IActionResult> GetAllCaWithCertificates()
-        {
-            var service = (ICertificateAuthorityService)Service;
-
-            var result = await ExecuteServiceMethod(service.GetAllAuthoritiesAndCertificate);
-
-            return result;
-        }
-
         [Route("calist"), HttpGet]
         public async Task<IActionResult> GetCaListBreif()
         {

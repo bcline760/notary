@@ -1,7 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 
 using Notary.Contract;
-
 using System.Text;
 
 namespace Notary.Model
@@ -16,11 +15,10 @@ namespace Notary.Model
 
         public CertificateAuthorityModel(CertificateAuthority ca) : base(ca)
         {
+            CertificateSlug = ca.CertificateSlug;
             DistinguishedName = new DistinguishedNameModel(ca.DistinguishedName);
             if (ca.IssuingDn != null)
                 IssuingDn = new DistinguishedNameModel(ca.IssuingDn);
-            IssuingSerialNumber = ca.IssuingSerialNumber;
-            IssuingThumbprint = ca.IssuingThumbprint;
             IsIssuer = ca.IsIssuer;
             KeyAlgorithm = ca.KeyAlgorithm;
             KeyCurve = ca.KeyCurve;
@@ -28,6 +26,12 @@ namespace Notary.Model
             Name = ca.Name;
             ParentCaSlug = ca.ParentCaSlug;
         }
+
+        /// <summary>
+        /// Get or set slug of the certificate associated with the CA
+        /// </summary>
+        [BsonElement("cert_slug")]
+        public string CertificateSlug { get; set; }
 
         [BsonElement("dn")]
         public DistinguishedNameModel DistinguishedName { get; set; }

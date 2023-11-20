@@ -41,6 +41,7 @@ namespace Notary.Contract
                 StateProvince = model.DistinguishedName.StateProvince
             };
 
+            CertificateSlug = model.CertificateSlug;
             IsIssuer = model.IsIssuer;
             KeyAlgorithm = model.KeyAlgorithm;
             KeyCurve = model.KeyCurve;
@@ -49,6 +50,15 @@ namespace Notary.Contract
             ParentCaSlug = model.ParentCaSlug;
         }
 
+        /// <summary>
+        /// Get or set slug of the certificate associated with the CA
+        /// </summary>
+        [DataMember]
+        public string CertificateSlug { get; set; }
+
+        /// <summary>
+        /// Get or set the CA distinguished name
+        /// </summary>
         [DataMember]
         public DistinguishedName DistinguishedName { get; set; }
 

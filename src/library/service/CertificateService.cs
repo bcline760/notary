@@ -119,6 +119,7 @@ namespace Notary.Service
                     CreatedBySlug = request.RequestedBySlug,
                     Data = generatedCertificate.GetEncoded(), //Get the DER encoded certificate binary and store it.
                     Issuer = parentCert == null ? request.Subject : parentCert.Subject,
+                    IssuingSlug = request.ParentCertificateSlug,
                     KeyUsage = request.KeyUsage,
                     Name = request.Name,
                     NotAfter = notAfter,
@@ -195,7 +196,7 @@ namespace Notary.Service
 
         public async Task<List<Certificate>> GetCertificatesByCaAsync(string slug)
         {
-            var repository = (Interface.Repository.ICertificateRepository)Repository;
+            var repository = (ICertificateRepository)Repository;
 
             return await repository.GetCertificatesByCaAsync(slug);
         }

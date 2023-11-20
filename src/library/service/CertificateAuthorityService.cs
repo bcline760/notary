@@ -9,6 +9,8 @@ using Notary.Interface.Repository;
 using Notary.Interface.Service;
 using Notary.Logging;
 
+using Org.BouncyCastle.X509;
+
 namespace Notary.Service
 {
     public class CertificateAuthorityService : EntityService<CertificateAuthority>, ICertificateAuthorityService
@@ -31,10 +33,22 @@ namespace Notary.Service
                 throw new ArgumentException("Must supply a key length if using RSA");
 
             CertificateAuthority parentCa = null;
+            X509Certificate parentCertificate = null;
             if (!string.IsNullOrEmpty(setup.ParentCaSlug))
+            {
                 parentCa = await Repository.GetAsync(setup.ParentCaSlug);
+                if (parentCa == null)
+                    throw new ArgumentNullException(nameof(parentCa));
+
+                var cert = await CertificateService.GetAsync(parentCa.CertificateSlug);
+                if (cert == null)
+                    throw new ArgumentNullException(nameof(cert));
+
+                parentCertificate = GetX509FromBinary(cert.Data);
+            }
 
             var now = DateTime.UtcNow;
+            short keyUsageBits = (short)KeyPurposeFlags.CodeSigning;
 
             DistinguishedName issuerDn = null;
             var dn = new DistinguishedName
@@ -60,11 +74,27 @@ namespace Notary.Service
                 };
             }
 
+            var caRequest = new CertificateRequest
+            {
+                Curve = parentCa != null ? parentCa.KeyCurve : setup.Curve,
+                KeyAlgorithm = parentCa != null ? parentCa.KeyAlgorithm : setup.Algorithm,
+                KeySize = parentCa != null ? parentCa.KeyLength : setup.KeyLength,
+                KeyUsage = keyUsageBits,
+                LengthInHours = 87600, // 10 years
+                Name = setup.Name,
+                ParentCertificateSlug = parentCa != null ? parentCa.CertificateSlug : null,
+                RequestedBySlug = setup.Requestor,
+                Subject = dn
+            };
+
+            var caCertificate = await CertificateService.IssueCertificateAsync(caRequest);
+
             try
             {
-                short keyUsageBits = (short)KeyPurposeFlags.CodeSigning;
+                
                 var ca = new CertificateAuthority
                 {
+                    CertificateSlug = caCertificate.Slug,
                     DistinguishedName = dn,
                     IsIssuer = setup.IsIssuer,
                     IssuingDn = issuerDn,
@@ -111,6 +141,19 @@ namespace Notary.Service
             }
 
             return caListBrief;
+        }
+
+        /// <summary>
+        /// Convert raw binary data to a X.509 certificate object
+        /// </summary>
+        /// <param name="certificateData">The raw certificate binary</param>
+        /// <returns>An X.509 certificate or null if it is not on disk</returns>
+        private X509Certificate GetX509FromBinary(byte[] certificateData)
+        {
+            var parser = new X509CertificateParser();
+            X509Certificate cert = parser.ReadCertificate(certificateData);
+
+            return cert;
         }
 
         protected ICertificateService CertificateService { get; }
