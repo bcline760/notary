@@ -15,7 +15,7 @@ namespace Notary.Model
 
         public CertificateModel(Certificate contract) : base(contract)
         {
-            CertificateAuthoritySlug = contract.CertificateAuthoritySlug;
+            IssuingSlug = contract.IssuingSlug;
             IsCaCertificate = contract.IsCaCertificate;
             KeyUsage = contract.KeyUsage;
             Issuer = new DistinguishedNameModel(contract.Issuer);
@@ -30,14 +30,14 @@ namespace Notary.Model
             Thumbprint = contract.Thumbprint;
         }
 
-        [BsonElement("ca_slug"), BsonRequired]
-        public string CertificateAuthoritySlug { get; set; }
+        [BsonElement("is_ca"), BsonRequired]
+        public bool IsCaCertificate { get; set; }
 
         [BsonElement("iss"), BsonRequired]
         public DistinguishedNameModel Issuer { get; set; }
 
-        [BsonElement("is_ca"), BsonRequired]
-        public bool IsCaCertificate { get; set; }
+        [BsonElement("iss_slug"), BsonRequired]
+        public string IssuingSlug { get; set; }
 
         [BsonElement("key_usage"), BsonRequired]
         public short KeyUsage { get; set; }

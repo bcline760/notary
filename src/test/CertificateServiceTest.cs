@@ -40,7 +40,7 @@ public class CertificateServiceTest
         return new Certificate
         {
             Active = true,
-            CertificateAuthoritySlug = It.IsAny<string>(),
+            IssuingSlug = It.IsAny<string>(),
             CreatedBySlug = It.IsAny<string>(),
             Created = DateTime.MinValue,
             IsCaCertificate = It.IsAny<bool>(),
@@ -53,9 +53,6 @@ public class CertificateServiceTest
                 OrganizationalUnit = It.IsAny<string>(),
                 StateProvince = It.IsAny<string>()
             },
-            KeyAlgorithm = Algorithm.RSA,
-            KeyCurve = null,
-            KeyLength = It.IsAny<int>(),
             KeyUsage = It.IsAny<short>(),
             Name = It.IsAny<string>(),
             NotAfter = DateTime.MaxValue,
@@ -106,8 +103,6 @@ public class CertificateServiceTest
                 OrganizationalUnit = It.IsAny<string>(),
                 StateProvince = It.IsAny<string>()
             },
-            IssuingSerialNumber = It.IsAny<string>(),
-            IssuingThumbprint = It.IsAny<string>(),
             KeyAlgorithm = It.IsAny<Algorithm>(),
             KeyCurve = null,
             KeyLength = It.IsAny<int>(),
@@ -123,7 +118,7 @@ public class CertificateServiceTest
     {
         return new CertificateRequest
         {
-            CertificateAuthoritySlug = It.IsAny<string>(),
+            ParentCertificateSlug = It.IsAny<string>(),
             CertificatePassword = It.IsAny<string>(),
             Curve = null,
             KeyAlgorithm = Algorithm.RSA,

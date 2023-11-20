@@ -139,7 +139,7 @@ public class CertificateAuthorityServiceTest : NotaryTest
         return new Certificate
         {
             Active = true,
-            CertificateAuthoritySlug = "string",
+            IssuingSlug = "string",
             CreatedBySlug = "string",
             Created = DateTime.MinValue,
             IsCaCertificate = false,

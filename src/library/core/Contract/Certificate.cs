@@ -19,7 +19,7 @@ namespace Notary.Contract
 
         public Certificate(CertificateModel model) : base(model)
         {
-            CertificateAuthoritySlug = model.CertificateAuthoritySlug;
+            IssuingSlug = model.IssuingSlug;
             IsCaCertificate = model.IsCaCertificate;
             Name = model.Name;
             NotAfter = model.NotAfter;
@@ -61,9 +61,6 @@ namespace Notary.Contract
             }
         }
 
-        [JsonProperty("ca_slug", Required = Required.Always)]
-        public string CertificateAuthoritySlug { get; set; }
-
         /// <summary>
         /// Get or set the certificate binary
         /// </summary>
@@ -84,6 +81,9 @@ namespace Notary.Contract
         {
             get; set;
         }
+
+        [JsonProperty("iss_slug", Required = Required.Always)]
+        public string IssuingSlug { get; set; }
 
         [JsonProperty("key_slug", Required = Required.Always)]
         public string KeySlug { get; set; }

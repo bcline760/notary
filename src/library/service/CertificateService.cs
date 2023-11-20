@@ -35,11 +35,9 @@ namespace Notary.Service
             NotaryConfiguration config,
             IAsymmetricKeyService keyService,
             ICertificateRepository repository,
-            ICertificateAuthorityService certificateAuthorityService,
             ILog log) : base(repository, log)
         {
             Configuration = config;
-            CertificateAuthority = certificateAuthorityService;
             KeyService = keyService;
         }
 
@@ -47,22 +45,21 @@ namespace Notary.Service
         {
             try
             {
-                CertificateAuthority ca = null;
                 string issuerDn = null;
                 BigInteger issuerSn = null;
                 AsymmetricCipherKeyPair issuerKeyPair = null;
+                Certificate parentCert = null;
 
-                if (!string.IsNullOrEmpty(request.CertificateAuthoritySlug))
+                if (!string.IsNullOrEmpty(request.ParentCertificateSlug))
                 {
-                    ca = await CertificateAuthority.GetAsync(request.CertificateAuthoritySlug);
-                    if (ca == null)
-                        throw new InvalidOperationException($"Unable to find certificate authority with GUID {request.CertificateAuthoritySlug}");
-                    if (!ca.IsIssuer)
-                        throw new InvalidOperationException("This certificate authority is not an issuer of certificates");
+                    parentCert = await GetAsync(request.ParentCertificateSlug);
+                    if (parentCert == null)
+                        throw new InvalidOperationException("Given certificate was not found");
 
-                    issuerKeyPair = LoadKeyPair(keyPath, Configuration.ApplicationKey, ca.KeyAlgorithm);
-                    issuerSn = new BigInteger(ca.IssuingSerialNumber, 16);
-                    issuerDn = DistinguishedName.BuildDistinguishedName(ca.DistinguishedName);
+                    var cert = GetX509FromBinary(parentCert.Data);
+                    issuerKeyPair = await KeyService.GetKeyPairAsync(parentCert.KeySlug);
+                    issuerSn = cert.SerialNumber;
+                    issuerDn = DistinguishedName.BuildDistinguishedName(parentCert.Subject);
                 }
 
                 var random = GetSecureRandom();
@@ -70,7 +67,7 @@ namespace Notary.Service
                 var serialNumber = GenerateSerialNumber(random);
                 var subject = DistinguishedName.BuildDistinguishedName(request.Subject);
                 var notAfter = DateTime.UtcNow.AddHours(request.LengthInHours);
-                
+
                 var keyUsages = new List<KeyPurposeID>();
 
                 //TODO: There has to be a better way to do this...
@@ -105,9 +102,9 @@ namespace Notary.Service
                     subject,
                     certificateKeyPair,
                     serialNumber,
-                    ca == null ? DistinguishedName.BuildDistinguishedName(request.Subject) : DistinguishedName.BuildDistinguishedName(ca.DistinguishedName),
+                    parentCert == null ? DistinguishedName.BuildDistinguishedName(request.Subject) : DistinguishedName.BuildDistinguishedName(parentCert.Subject),
                     notAfter,
-                    ca==null ? issuerKeyPair : certificateKeyPair,
+                    parentCert == null ? issuerKeyPair : certificateKeyPair,
                     issuerSn,
                     false,
                     keyUsages.ToArray()
@@ -121,7 +118,7 @@ namespace Notary.Service
                     Created = DateTime.UtcNow,
                     CreatedBySlug = request.RequestedBySlug,
                     Data = generatedCertificate.GetEncoded(), //Get the DER encoded certificate binary and store it.
-                    Issuer = ca == null ? request.Subject : ca.DistinguishedName,
+                    Issuer = parentCert == null ? request.Subject : parentCert.Subject,
                     KeyUsage = request.KeyUsage,
                     Name = request.Name,
                     NotAfter = notAfter,
@@ -148,7 +145,7 @@ namespace Notary.Service
             var certificate = await GetAsync(slug);
             if (certificate == null)
                 return null;
-                        
+
             byte[] certificateBinary = null;
 
             X509Certificate cert = GetX509FromBinary(certificate.Data);
@@ -402,9 +399,5 @@ namespace Notary.Service
         protected NotaryConfiguration Configuration { get; }
 
         protected IAsymmetricKeyService KeyService { get; }
-
-        protected ICertificateAuthorityService CertificateAuthority { get; }
-
-        protected IEncryptionService EncryptionService { get; }
     }
 }

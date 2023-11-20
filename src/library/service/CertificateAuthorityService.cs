@@ -15,8 +15,10 @@ namespace Notary.Service
     {
         public CertificateAuthorityService(
             ICertificateAuthorityRepository repo,
+            ICertificateService caService,
             NotaryConfiguration config, ILog log) : base(repo, log)
         {
+            CertificateService = caService;
             Configuration = config;
         }
 
@@ -110,6 +112,8 @@ namespace Notary.Service
 
             return caListBrief;
         }
+
+        protected ICertificateService CertificateService { get; }
 
         protected NotaryConfiguration Configuration { get; }
     }

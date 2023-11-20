@@ -14,10 +14,10 @@ namespace Notary.Contract
         }
 
         [DataMember]
-        public string CertificateAuthoritySlug { get; set; }
+        public string CertificatePassword { get; set; }
 
         [DataMember]
-        public string CertificatePassword { get; set; }
+        public EllipticCurve? Curve { get; set; }
 
         [DataMember]
         public Algorithm KeyAlgorithm { get; set; }
@@ -27,9 +27,6 @@ namespace Notary.Contract
 
         [DataMember]
         public short KeyUsage { get; set; }
-
-        [DataMember]
-        public EllipticCurve? Curve { get; set; }
 
         /// <summary>
         /// Get or set the expiration length in hours.
@@ -42,6 +39,9 @@ namespace Notary.Contract
         /// </summary>
         [DataMember]
         public string Name { get; set; }
+
+        [DataMember]
+        public string ParentCertificateSlug { get; set; }
 
         [DataMember]
         public DistinguishedName Subject { get; set; }
