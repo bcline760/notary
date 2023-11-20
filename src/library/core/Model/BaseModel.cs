@@ -13,6 +13,7 @@ namespace Notary.Model
     [BsonKnownTypes(
         typeof(CertificateModel),
         typeof(CertificateAuthorityModel),
+        typeof(AsymmetricKeyModel),
         typeof(RevocatedCertificateModel)
     )]
     public abstract class BaseModel

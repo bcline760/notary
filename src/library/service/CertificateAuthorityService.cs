@@ -8,8 +8,6 @@ using Notary.Contract;
 using Notary.Interface.Repository;
 using Notary.Interface.Service;
 using Notary.Logging;
-using Org.BouncyCastle.Asn1.X509;
-using Org.BouncyCastle.X509;
 
 namespace Notary.Service
 {
@@ -17,13 +15,9 @@ namespace Notary.Service
     {
         public CertificateAuthorityService(
             ICertificateAuthorityRepository repo,
-            ICertificateRepository certRepo,
-            IEncryptionService encService,
             NotaryConfiguration config, ILog log) : base(repo, log)
         {
             Configuration = config;
-            CertificateRepository = certRepo;
-            EncryptionService = encService;
         }
 
         public async Task SetupCertificateAuthority(CertificateAuthoritySetup setup)
@@ -39,9 +33,6 @@ namespace Notary.Service
                 parentCa = await Repository.GetAsync(setup.ParentCaSlug);
 
             var now = DateTime.UtcNow;
-            var randomRoot = EncryptionService.GetSecureRandom();
-            var serialNum = EncryptionService.GenerateSerialNumber(randomRoot);
-            var keyPair = EncryptionService.GenerateKeyPair(randomRoot, setup.Algorithm, setup.Curve, setup.KeyLength);
 
             DistinguishedName issuerDn = null;
             var dn = new DistinguishedName
@@ -67,36 +58,14 @@ namespace Notary.Service
                 };
             }
 
-            X509Certificate caCertificate = null;
             try
             {
-                caCertificate = EncryptionService.GenerateCertificate(
-                    new List<SubjectAlternativeName>(),
-                    randomRoot,
-                    setup.Algorithm,
-                    DistinguishedName.BuildDistinguishedName(dn),
-                    keyPair,
-                    serialNum,
-                    issuerDn != null ? DistinguishedName.BuildDistinguishedName(issuerDn) : DistinguishedName.BuildDistinguishedName(dn), //Root certs self signed
-                    now.AddYears(setup.LengthInYears),
-                    keyPair, //Root certs, self signed
-                    serialNum,
-                    true,
-                    new KeyPurposeID[]
-                    {
-                        KeyPurposeID.IdKPCodeSigning
-                    });
-
-                var thumb = EncryptionService.GetThumbprint(caCertificate);
-
                 short keyUsageBits = (short)KeyPurposeFlags.CodeSigning;
                 var ca = new CertificateAuthority
                 {
                     DistinguishedName = dn,
                     IsIssuer = setup.IsIssuer,
                     IssuingDn = issuerDn,
-                    IssuingSerialNumber = caCertificate.SerialNumber.ToString(),
-                    IssuingThumbprint = thumb,
                     Active = true,
                     Created = DateTime.UtcNow,
                     CreatedBySlug = setup.Requestor,
@@ -108,68 +77,11 @@ namespace Notary.Service
                 };
 
                 await SaveAsync(ca, setup.Requestor);
-
-                string path = $"{Configuration.RootDirectory}/{ca.Slug}";
-
-                string keyPath = $"{path}/keys/{thumb}.key.pem";
-                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(keyPath));
-                EncryptionService.SavePrivateKey(keyPair, keyPath, randomRoot, Configuration.ApplicationKey);
-
-                string certPath = $"{path}/{Constants.CertificateDirectoryPath}/{thumb}.cer";
-                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(certPath));
-                await EncryptionService.SaveCertificateAsync(caCertificate, certPath);
-
-                var caCert = new Certificate
-                {
-                    Active = true,
-                    CertificateAuthoritySlug = ca.Slug,
-                    Created = ca.Created,
-                    CreatedBySlug = ca.CreatedBySlug,
-                    IsCaCertificate = true,
-                    Issuer = issuerDn != null ? issuerDn : dn,
-                    KeyAlgorithm = ca.KeyAlgorithm,
-                    KeyCurve = ca.KeyCurve,
-                    KeyLength = ca.KeyLength,
-                    KeyUsage = keyUsageBits,
-                    Name = setup.Name,
-                    NotAfter = now.AddYears(setup.LengthInYears),
-                    NotBefore = now,
-                    SerialNumber = caCertificate.SerialNumber.ToString(),
-                    Subject = dn,
-                    SignatureAlgorithm = caCertificate.SigAlgName,
-                    Thumbprint = thumb
-                };
-
-                await CertificateRepository.SaveAsync(caCert);
             }
             catch (Exception cex)
             {
                 throw cex.IfNotLoggedThenLog(Logger);
             }
-        }
-
-        public async Task<List<CaCertificateList>> GetAllAuthoritiesAndCertificate()
-        {
-            var caCertList = new List<CaCertificateList>();
-
-            var caList = await ((ICertificateAuthorityRepository)Repository).GetAllAsync();
-            caCertList.AddRange(caList.Select(ca => new CaCertificateList
-            {
-                Name = ca.Name,
-                ParentCaSlug = ca.ParentCaSlug,
-                Slug = ca.Slug
-            }));
-
-            foreach (var ca in caCertList)
-            {
-                var certificates = await CertificateRepository.GetCertificatesByCaAsync(ca.Slug);
-
-                //Strip out the CA certificates, those will be handled in another location.
-                certificates = certificates.Where(c => !c.IsCaCertificate).ToList();
-                ca.CertificateCollection.AddRange(certificates);
-            }
-
-            return caCertList;
         }
 
         public async Task<List<CaBrief>> GetCaListBrief()
@@ -200,11 +112,5 @@ namespace Notary.Service
         }
 
         protected NotaryConfiguration Configuration { get; }
-
-        protected ICertificateRevokeService CertificateRevokeService { get; }
-
-        protected ICertificateRepository CertificateRepository { get; }
-
-        protected IEncryptionService EncryptionService { get; }
     }
 }

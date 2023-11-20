@@ -15,8 +15,6 @@ namespace Notary.Model
 
         public CertificateModel(Certificate contract) : base(contract)
         {
-            Algorithm = contract.KeyAlgorithm;
-            EllipticCurve = contract.KeyCurve;
             CertificateAuthoritySlug = contract.CertificateAuthoritySlug;
             IsCaCertificate = contract.IsCaCertificate;
             KeyUsage = contract.KeyUsage;
@@ -32,14 +30,8 @@ namespace Notary.Model
             Thumbprint = contract.Thumbprint;
         }
 
-        [BsonElement("alg"), BsonRequired]
-        public Algorithm Algorithm { get; set; }
-
-        [BsonElement("caSlug"), BsonRequired]
+        [BsonElement("ca_slug"), BsonRequired]
         public string CertificateAuthoritySlug { get; set; }
-
-        [BsonElement("ec")]
-        public EllipticCurve? EllipticCurve { get; set; }
 
         [BsonElement("iss"), BsonRequired]
         public DistinguishedNameModel Issuer { get; set; }
@@ -47,11 +39,11 @@ namespace Notary.Model
         [BsonElement("is_ca"), BsonRequired]
         public bool IsCaCertificate { get; set; }
 
-        [BsonElement("keyUsage"), BsonRequired]
+        [BsonElement("key_usage"), BsonRequired]
         public short KeyUsage { get; set; }
 
-        [BsonElement("key_len")]
-        public short KeyLength { get; set; }
+        [BsonElement("key_slug"), BsonRequired]
+        public string KeySlug { get; set; }
 
         [BsonElement("name"), BsonRequired]
         public string Name { get; set; }
@@ -68,7 +60,7 @@ namespace Notary.Model
         [BsonElement("sn"), BsonRequired]
         public string SerialNumber { get; set; }
 
-        [BsonElement("sigAlg"), BsonRequired]
+        [BsonElement("sig_alg"), BsonRequired]
         public string SignatureAlgorithm { get; set; }
 
         [BsonElement("sub"), BsonRequired]

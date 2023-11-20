@@ -21,8 +21,6 @@ namespace Notary.Contract
         {
             CertificateAuthoritySlug = model.CertificateAuthoritySlug;
             IsCaCertificate = model.IsCaCertificate;
-            KeyAlgorithm = model.Algorithm;
-            KeyCurve = model.EllipticCurve;
             Name = model.Name;
             NotAfter = model.NotAfter;
             NotBefore = model.NotBefore;
@@ -63,10 +61,19 @@ namespace Notary.Contract
             }
         }
 
-        [JsonProperty("caSlug", Required = Required.Always)]
+        [JsonProperty("ca_slug", Required = Required.Always)]
         public string CertificateAuthoritySlug { get; set; }
 
-        [JsonProperty("isCa", Required = Required.Always)]
+        /// <summary>
+        /// Get or set the certificate binary
+        /// </summary>
+        [JsonProperty("data", Required = Required.Always)]
+        public byte[] Data { get; set; }
+
+        /// <summary>
+        /// Get or set whether this certificate is a CA
+        /// </summary>
+        [JsonProperty("is_ca", Required = Required.Always)]
         public bool IsCaCertificate { get; set; }
 
         /// <summary>
@@ -78,24 +85,10 @@ namespace Notary.Contract
             get; set;
         }
 
-        [JsonProperty("alg", Required = Required.Always)]
-        public Algorithm KeyAlgorithm
-        {
-            get; set;
-        }
+        [JsonProperty("key_slug", Required = Required.Always)]
+        public string KeySlug { get; set; }
 
-        /// <summary>
-        /// The elliptic curve to use if EC is used to generate the keys
-        /// </summary>
-        [JsonProperty("curve", Required = Required.AllowNull)]
-        public EllipticCurve? KeyCurve { get; set; }
-
-        /// <summary>
-        /// The length of the RSA key if RSA is used to generate the keys
-        /// </summary>
-        public int? KeyLength { get; set; }
-
-        [JsonProperty("keyUsage", Required = Required.Always)]
+        [JsonProperty("key_usage", Required = Required.Always)]
         public short KeyUsage
         {
             get; set;
@@ -107,7 +100,7 @@ namespace Notary.Contract
         /// <summary>
         /// The certificate is not valid before this given date.
         /// </summary>
-        [JsonProperty("notBefore", Required = Required.Always)]
+        [JsonProperty("not_before", Required = Required.Always)]
         public DateTime NotBefore
         {
             get; set;
@@ -116,7 +109,7 @@ namespace Notary.Contract
         /// <summary>
         /// The certificate is not valid after the given date
         /// </summary>
-        [JsonProperty("notAfter", Required = Required.Always)]
+        [JsonProperty("note_after", Required = Required.Always)]
         public DateTime NotAfter
         {
             get; set;
@@ -125,22 +118,22 @@ namespace Notary.Contract
         /// <summary>
         /// Get or set the date the certificate was issued
         /// </summary>
-        [JsonProperty("revocationDate", Required = Required.Always)]
+        [JsonProperty("rev_date", Required = Required.Always)]
         public DateTime? RevocationDate
         {
             get; set;
         }
 
-        [JsonProperty("serialNumber", Required = Required.Always)]
+        [JsonProperty("sn", Required = Required.Always)]
         public string SerialNumber
         {
             get; set;
         }
 
-        [JsonProperty("sigAlg", Required = Required.Always)]
+        [JsonProperty("sig_alg", Required = Required.Always)]
         public string SignatureAlgorithm { get; set; }
 
-        [JsonProperty("subject", Required = Required.Always)]
+        [JsonProperty("sub", Required = Required.Always)]
         public DistinguishedName Subject { get; set; }
 
         [JsonProperty("san", Required = Required.AllowNull)]
@@ -157,7 +150,7 @@ namespace Notary.Contract
 
         public override string[] SlugProperties()
         {
-            return new string[] { Guid.NewGuid().ToString() };
+            return new string[] { Guid.NewGuid().ToString("N") };
         }
     }
 }

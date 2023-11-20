@@ -26,7 +26,6 @@ namespace Notary.Service
             IRevocatedCertificateRepository revocatedCertificateRepo,
             ICertificateAuthorityService caService,
             ICertificateService certificateService,
-            IEncryptionService encService,
             ILog log,
             NotaryConfiguration config
         ) : base(revocatedCertificateRepo, log)
@@ -34,7 +33,6 @@ namespace Notary.Service
             CertificateAuthority = caService;
             CertificateService = certificateService;
             Configuration = config;
-            EncryptionService = encService;
         }
 
         public async Task<string> GenerateCrl(string caSlug)
@@ -43,10 +41,10 @@ namespace Notary.Service
             var crlGen = new X509V2CrlGenerator();
 
             var revocatedCerts = await GetRevocatedCertificates();
-            string signingPrivateKeyPath = $"{Configuration.RootDirectory}/{ca.Slug}/{Constants.KeyDirectoryPath}/{ca.IssuingThumbprint}.key.pem";
-            string certificatePath = $"{Configuration.RootDirectory}/{ca.Slug}/{Constants.CertificateDirectoryPath}/{ca.IssuingThumbprint}.cer";
-            var issuerKeyPair = EncryptionService.LoadKeyPair(signingPrivateKeyPath, Configuration.ApplicationKey, ca.KeyAlgorithm);
-            var signingCertificate = await EncryptionService.LoadCertificateAsync(certificatePath);
+            //string signingPrivateKeyPath = $"{Configuration.RootDirectory}/{ca.Slug}/{Constants.KeyDirectoryPath}/{ca.IssuingThumbprint}.key.pem";
+            //string certificatePath = $"{Configuration.RootDirectory}/{ca.Slug}/{Constants.CertificateDirectoryPath}/{ca.IssuingThumbprint}.cer";
+            //var issuerKeyPair = EncryptionService.LoadKeyPair(signingPrivateKeyPath, Configuration.ApplicationKey, ca.KeyAlgorithm);
+            //var signingCertificate = await EncryptionService.LoadCertificateAsync(certificatePath);
 
             crlGen.SetIssuerDN(signingCertificate.SubjectDN);
             crlGen.SetThisUpdate(DateTime.UtcNow);
@@ -56,10 +54,6 @@ namespace Notary.Service
             {
                 var c = await GetAsync(cert.CertificateSlug);
                 const string certType = "issued";
-
-                string revokedCertPath = $"{Configuration.RootDirectory}/{certType}/{Constants.CertificateDirectoryPath}/{cert.Thumbprint}.cer";
-                X509Certificate certificate = await EncryptionService.LoadCertificateAsync(revokedCertPath);
-                certificate.CheckValidity();
 
                 int reason = -1;
                 switch (cert.Reason)
@@ -152,8 +146,6 @@ namespace Notary.Service
         protected ICertificateAuthorityService CertificateAuthority { get; }
 
         protected ICertificateService CertificateService { get; }
-
-        protected IEncryptionService EncryptionService { get; }
 
         protected NotaryConfiguration Configuration { get; }
     }

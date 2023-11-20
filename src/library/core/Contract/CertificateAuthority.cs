@@ -42,8 +42,6 @@ namespace Notary.Contract
             };
 
             IsIssuer = model.IsIssuer;
-            IssuingSerialNumber = model.IssuingSerialNumber;
-            IssuingThumbprint = model.IssuingThumbprint;
             KeyAlgorithm = model.KeyAlgorithm;
             KeyCurve = model.KeyCurve;
             KeyLength = model.KeyLength;
@@ -59,12 +57,6 @@ namespace Notary.Contract
 
         [DataMember]
         public DistinguishedName IssuingDn { get; set; }
-
-        [DataMember]
-        public string IssuingSerialNumber { get; set; }
-
-        [DataMember]
-        public string IssuingThumbprint { get; set; }
 
         [DataMember]
         public Algorithm KeyAlgorithm

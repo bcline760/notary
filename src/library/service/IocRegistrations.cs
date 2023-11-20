@@ -13,17 +13,20 @@ namespace Notary.Service
     {
         protected override void Load(ContainerBuilder builder)
         {
+            builder.RegisterType<AsymmetricKeyService>()
+                .As<IAsymmetricKeyService>()
+                .InstancePerMatchingLifetimeScope();
+
             builder.RegisterType<CertificateAuthorityService>()
                 .As<ICertificateAuthorityService>()
                 .InstancePerLifetimeScope();
+
             builder.RegisterType<CertificateRevokeService>()
                 .As<ICertificateRevokeService>()
                 .InstancePerLifetimeScope();
+
             builder.RegisterType<CertificateService>()
                 .As<ICertificateService>()
-                .InstancePerLifetimeScope();
-            builder.RegisterType<EncryptionService>()
-                .As<IEncryptionService>()
                 .InstancePerLifetimeScope();
         }
     }
