@@ -3,7 +3,7 @@ WORKDIR /src
 COPY . .
 RUN dotnet restore ./src/sln/Notary.sln -v q --no-cache
 RUN dotnet build ./src/sln/Notary.sln -v q -c Release --no-restore --nologo
-RUN dotnet publish ./src/api/Notary.Api.csproj -o /publish --no-restore --nologo --no-build -c Release --sc -v q
+RUN dotnet publish ./src/api/Notary.Api.csproj -o /publish --no-restore --nologo --no-build -c Release -v q
 
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 as runtime
 ENV AzureAd__Domain ""
