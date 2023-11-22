@@ -42,12 +42,6 @@ namespace Notary.Model
         [BsonElement("issuing_dn")]
         public DistinguishedNameModel IssuingDn { get; set; }
 
-        [BsonElement("issuing_sn")]
-        public string IssuingSerialNumber { get; set; }
-
-        [BsonElement("issuing_thumbprint")]
-        public string IssuingThumbprint { get; set; }
-
         [BsonElement("key_alg")]
         public Algorithm KeyAlgorithm
         {

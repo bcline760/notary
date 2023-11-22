@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using MongoDB.Bson.Serialization.Attributes;
 using Notary.Contract;
 
@@ -15,6 +16,7 @@ namespace Notary.Model
 
         public CertificateModel(Certificate contract) : base(contract)
         {
+            Data = contract.Data;
             IssuingSlug = contract.IssuingSlug;
             IsCaCertificate = contract.IsCaCertificate;
             KeyUsage = contract.KeyUsage;
@@ -29,6 +31,9 @@ namespace Notary.Model
             SubjectAlternativeNames = contract.SubjectAlternativeNames?.Select(s => new SanModel(s)).ToList();
             Thumbprint = contract.Thumbprint;
         }
+
+        [BsonElement("data"), BsonRequired]
+        public string Data { get; set; }
 
         [BsonElement("is_ca"), BsonRequired]
         public bool IsCaCertificate { get; set; }

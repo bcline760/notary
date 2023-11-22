@@ -13,7 +13,7 @@ using Org.BouncyCastle.X509;
 
 namespace Notary.Service
 {
-    public class CertificateAuthorityService : EntityService<CertificateAuthority>, ICertificateAuthorityService
+    public class CertificateAuthorityService : CryptographicEntityService<CertificateAuthority>, ICertificateAuthorityService
     {
         public CertificateAuthorityService(
             ICertificateAuthorityRepository repo,
@@ -44,7 +44,7 @@ namespace Notary.Service
                 if (cert == null)
                     throw new ArgumentNullException(nameof(cert));
 
-                parentCertificate = GetX509FromBinary(cert.Data);
+                parentCertificate = GetX509FromPem(cert.Data);
             }
 
             var now = DateTime.UtcNow;
@@ -91,7 +91,7 @@ namespace Notary.Service
 
             try
             {
-                
+
                 var ca = new CertificateAuthority
                 {
                     CertificateSlug = caCertificate.Slug,
@@ -141,19 +141,6 @@ namespace Notary.Service
             }
 
             return caListBrief;
-        }
-
-        /// <summary>
-        /// Convert raw binary data to a X.509 certificate object
-        /// </summary>
-        /// <param name="certificateData">The raw certificate binary</param>
-        /// <returns>An X.509 certificate or null if it is not on disk</returns>
-        private X509Certificate GetX509FromBinary(byte[] certificateData)
-        {
-            var parser = new X509CertificateParser();
-            X509Certificate cert = parser.ReadCertificate(certificateData);
-
-            return cert;
         }
 
         protected ICertificateService CertificateService { get; }

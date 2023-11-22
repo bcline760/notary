@@ -4,7 +4,7 @@ using log4net;
 
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Identity.Web;
-
+using Microsoft.IdentityModel.Logging;
 using Notary.Configuration;
 using Notary.Service;
 
@@ -15,6 +15,10 @@ builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
 
 builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
+
+#if DEBUG
+IdentityModelEventSource.ShowPII = true;
+#endif
 
 builder.Services.AddCors(o =>
 {

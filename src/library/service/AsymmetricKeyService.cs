@@ -143,17 +143,21 @@ namespace Notary.Service
                 generator.IterationCount = 32; // TODO: Remove magic number
             }
 
+            byte[] keyBytes = null;
+
             var pemObject = generator.Generate();
-            var bytes = new byte[pemObject.Content.Length];
-            using (var fs = new MemoryStream(bytes))
-            using (var tw = new StreamWriter(fs))
+            using (var fs = new MemoryStream())
             {
-                PemWriter pemWriter = new PemWriter(tw);
-                pemWriter.WriteObject(pemObject);
-                pemWriter.Writer.Flush();
+                using (var tw = new StreamWriter(fs))
+                {
+                    PemWriter pemWriter = new(tw);
+                    pemWriter.WriteObject(pemObject);
+                }
+
+                keyBytes = fs.ToArray();
             }
 
-            return bytes;
+            return keyBytes;
         }
 
         protected NotaryConfiguration Configuration { get; }

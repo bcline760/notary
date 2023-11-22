@@ -19,19 +19,29 @@ if (args.port) {
     port = args.port;
 }
 
-const certificateSchema = new Schema({
+const asymmetricKeySchema = new Schema({
     slug: { type: String, required: true, index: true },
-    alg: {
-        type: String,
-        enum: ['RSA', 'EllipticCurve'],
-        required: true
-    },
-    caSlug: { type: String, required: true, index: true },
-    ec: {
+    enc_prv_key: { type: String, require: true, index: false },
+    alg: { type: String, enum: ['RSA', 'EllipticCurve'], required: true },
+    curve: {
         type: String,
         enum: ['P256', 'P384', 'P521', 'P256K'],
         required: false
     },
+    key_len: { type: Number, required: false, index: true },
+    name: { type: String, required: true, index: true },
+    na: { type: Date, default: Date.now },
+    nb: { type: Date, default: Date.now },
+    active: { type: Boolean, required: true },
+    created: { type: Date, default: Date.now },
+    createdBy: { type: String, required: true },
+    updated: Date,
+    updatedBy: String
+})
+
+const certificateSchema = new Schema({
+    slug: { type: String, required: true, index: true },
+    data: { type: String, required: true, index: true },
     iss: {
         cn: String,
         c: String,
@@ -42,7 +52,7 @@ const certificateSchema = new Schema({
     },
     is_ca: { type: Boolean, required: true, index: true },
     keyUsage: { type: Number, required: true },
-    key_len: { type: Number, required: false },
+    key_slug: { type: Number, required: false },
     name: { type: String, required: true, index: true },
     nb: { type: Date, default: Date.now },
     na: { type: Date, default: Date.now },
@@ -62,15 +72,23 @@ const certificateSchema = new Schema({
         name: String
     }],
     thumb: { type: String, required: true, index: true },
+    active: { type: Boolean, required: true },
     created: { type: Date, default: Date.now },
     createdBy: { type: String, required: true },
     updated: Date,
-    updatedBy: String,
-    active: { type: Boolean, required: true }
+    updatedBy: String
 });
 
 const certificateAuthoritySchema = new Schema({
     slug: { type: String, required: true },
+    alg: { type: String, enum: ['RSA', 'EllipticCurve'], required: true },
+    cert_slug: { type: String, required: true },
+    curve: {
+        type: String,
+        enum: ['P256', 'P384', 'P521', 'P256K'],
+        required: false
+    },
+
     dn: {
         cn: String,
         c: String,
@@ -88,25 +106,14 @@ const certificateAuthoritySchema = new Schema({
         ou: String,
         s: String
     },
-    issuing_thumbprint: { type: String, required: true },
-    key_alg: {
-        type: String,
-        enum: ['RSA', 'EllipticCurve'],
-        required: true
-    },
-    curve: {
-        type: String,
-        enum: ['P256', 'P384', 'P521', 'P256K'],
-        required: false
-    },
-    key_len: Number,
+    key_len: { type: Number, required: false, index: true },
     name: { type: String, required: true },
     parent_slug: { type: String, required: false },
+    active: { type: Boolean, required: true },
     created: { type: Date, default: Date.now },
     createdBy: { type: String, required: true },
     updated: Date,
-    updatedBy: String,
-    active: { type: Boolean, required: true }
+    updatedBy: String
 });
 
 const revocatedCertificateSchema = new Schema({
@@ -114,23 +121,25 @@ const revocatedCertificateSchema = new Schema({
     reason: String,
     sn: { type: String, required: true, index: true },
     thumb: { type: String, required: true, index: true },
+    active: { type: Boolean, required: true },
     created: { type: Date, default: Date.now },
     createdBy: { type: String, required: true },
     updated: Date,
-    updatedBy: String,
-    active: { type: Boolean, required: true }
+    updatedBy: String
 });
 
 (async () => {
     const connectionString = `mongodb://${credentials}${args.server}:${port}/${args.database}`;
-    console.info('Connecting to database...');
+    console.info(`Connecting to database...`);
     await mongoose.connect(connectionString).catch((e) => console.error(e));
 
+    const AsymmetricKey = mongoose.model('asymmetricKey', asymmetricKeySchema);
     const Certificate = mongoose.model('certificate', certificateSchema);
     const CertificateAuthority = mongoose.model('certificate_authority', certificateAuthoritySchema);
     const RevocatedCertificate = mongoose.model('revocated_certificate', revocatedCertificateSchema);
 
     console.info('Creating new collections...');
+    await AsymmetricKey.createCollection().catch((e) => console.error(e));
     await Certificate.createCollection().catch((e) => console.error(e));
     await CertificateAuthority.createCollection().catch((e) => console.error(e));
     await RevocatedCertificate.createCollection().catch((e) => console.error(e));

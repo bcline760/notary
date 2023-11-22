@@ -4,6 +4,7 @@ using System.Linq;
 
 using Notary.Model;
 using Newtonsoft.Json;
+using System.Text;
 
 namespace Notary.Contract
 {
@@ -19,6 +20,7 @@ namespace Notary.Contract
 
         public Certificate(CertificateModel model) : base(model)
         {
+            Data = model.Data;
             IssuingSlug = model.IssuingSlug;
             IsCaCertificate = model.IsCaCertificate;
             Name = model.Name;
@@ -65,7 +67,7 @@ namespace Notary.Contract
         /// Get or set the certificate binary
         /// </summary>
         [JsonProperty("data", Required = Required.Always)]
-        public byte[] Data { get; set; }
+        public string Data { get; set; }
 
         /// <summary>
         /// Get or set whether this certificate is a CA

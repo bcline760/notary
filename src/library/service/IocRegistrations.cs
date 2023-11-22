@@ -15,7 +15,7 @@ namespace Notary.Service
         {
             builder.RegisterType<AsymmetricKeyService>()
                 .As<IAsymmetricKeyService>()
-                .InstancePerMatchingLifetimeScope();
+                .InstancePerLifetimeScope();
 
             builder.RegisterType<CertificateAuthorityService>()
                 .As<ICertificateAuthorityService>()

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Runtime.Serialization;
-
+using System.Text;
 using Newtonsoft.Json;
 using Notary.Model;
 
@@ -10,8 +10,15 @@ namespace Notary.Contract
     {
         public AsymmetricKey() { }
 
-        public AsymmetricKey(BaseModel model) : base(model)
+        public AsymmetricKey(AsymmetricKeyModel model) : base(model)
         {
+            EncryptedPrivateKey = Encoding.Default.GetBytes(model.EncryptedPrivateKey);
+            KeyAlgorithm = model.KeyAlgorithm;
+            KeyCurve = model.KeyCurve;
+            KeyLength = model.KeyLength;
+            Name = model.Name;
+            NotAfter = model.NotAfter;
+            NotBefore = model.NotBefore;
         }
 
         public AsymmetricKey(byte[] publicKey, byte[] privateKey)

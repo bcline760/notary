@@ -20,12 +20,13 @@ using System.Threading.Tasks;
 
 namespace Notary.Service
 {
-    internal class CertificateRevokeService : EntityService<RevocatedCertificate>, ICertificateRevokeService
+    internal class CertificateRevokeService : CryptographicEntityService<RevocatedCertificate>, ICertificateRevokeService
     {
         public CertificateRevokeService(
             IRevocatedCertificateRepository revocatedCertificateRepo,
             ICertificateAuthorityService caService,
             ICertificateService certificateService,
+            IAsymmetricKeyService keyService,
             ILog log,
             NotaryConfiguration config
         ) : base(revocatedCertificateRepo, log)
@@ -33,18 +34,24 @@ namespace Notary.Service
             CertificateAuthority = caService;
             CertificateService = certificateService;
             Configuration = config;
+            KeyService = keyService;
         }
 
         public async Task<string> GenerateCrl(string caSlug)
         {
             var ca = await CertificateAuthority.GetAsync(caSlug);
+            if (ca == null)
+                throw new ArgumentNullException(nameof(ca));
+
+            var caCert = await CertificateService.GetAsync(ca.CertificateSlug);
+            if (caCert == null)
+                throw new ArgumentNullException(nameof(caCert));
+
+            var keyPair = await KeyService.GetKeyPairAsync(caCert.KeySlug);
+            var signingCertificate = GetX509FromPem(caCert.Data);
             var crlGen = new X509V2CrlGenerator();
 
             var revocatedCerts = await GetRevocatedCertificates();
-            //string signingPrivateKeyPath = $"{Configuration.RootDirectory}/{ca.Slug}/{Constants.KeyDirectoryPath}/{ca.IssuingThumbprint}.key.pem";
-            //string certificatePath = $"{Configuration.RootDirectory}/{ca.Slug}/{Constants.CertificateDirectoryPath}/{ca.IssuingThumbprint}.cer";
-            //var issuerKeyPair = EncryptionService.LoadKeyPair(signingPrivateKeyPath, Configuration.ApplicationKey, ca.KeyAlgorithm);
-            //var signingCertificate = await EncryptionService.LoadCertificateAsync(certificatePath);
 
             crlGen.SetIssuerDN(signingCertificate.SubjectDN);
             crlGen.SetThisUpdate(DateTime.UtcNow);
@@ -52,7 +59,8 @@ namespace Notary.Service
 
             foreach (var cert in revocatedCerts)
             {
-                var c = await GetAsync(cert.CertificateSlug);
+                var rc = await CertificateService.GetAsync(cert.CertificateSlug);
+                var certificate = GetX509FromPem(rc.Data);
                 const string certType = "issued";
 
                 int reason = -1;
@@ -94,7 +102,7 @@ namespace Notary.Service
                 crlGen.AddExtension(X509Extensions.CrlNumber, false, new CrlNumber(BigInteger.Arbitrary(16)));
             }
 
-            var signatureFactory = new Asn1SignatureFactory("SHA256WithRSA", issuerKeyPair.Private);
+            var signatureFactory = new Asn1SignatureFactory("SHA256WithRSA", keyPair.Private);
             crlGen.AddExtension(X509Extensions.AuthorityKeyIdentifier, false, new AuthorityKeyIdentifierStructure(signingCertificate));
             var crl = crlGen.Generate(signatureFactory);
             byte[] crlBinary = null;
@@ -127,8 +135,8 @@ namespace Notary.Service
             if (certificate != null)
             {
                 certificate.RevocationDate = DateTime.UtcNow;
-                await CertificateService.SaveAsync(certificate,userRevocatingSlug);
-                
+                await CertificateService.SaveAsync(certificate, userRevocatingSlug);
+
                 var revocatedCertificate = new RevocatedCertificate
                 {
                     Active = true,
@@ -148,5 +156,7 @@ namespace Notary.Service
         protected ICertificateService CertificateService { get; }
 
         protected NotaryConfiguration Configuration { get; }
+
+        protected IAsymmetricKeyService KeyService { get; }
     }
 }

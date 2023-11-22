@@ -56,18 +56,29 @@ namespace Notary.Service
                     if (parentCert == null)
                         throw new InvalidOperationException("Given certificate was not found");
 
-                    var cert = GetX509FromBinary(parentCert.Data);
+                    var cert = GetX509FromPem(parentCert.Data);
                     issuerKeyPair = await KeyService.GetKeyPairAsync(parentCert.KeySlug);
                     issuerSn = cert.SerialNumber;
                     issuerDn = DistinguishedName.BuildDistinguishedName(parentCert.Subject);
                 }
-
+                var notAfter = DateTime.UtcNow.AddHours(request.LengthInHours);
                 var random = GetSecureRandom();
-                var certificateKeyPair = await GenerateKeyPair(request, request.KeyAlgorithm, request.Curve, request.KeySize);
+                var newKey = new AsymmetricKey
+                {
+                    Active = true,
+                    Created = DateTime.UtcNow,
+                    CreatedBySlug = request.RequestedBySlug,
+                    KeyAlgorithm = request.KeyAlgorithm,
+                    KeyCurve = request.Curve,
+                    KeyLength = request.KeySize,
+                    Name = request.Name,
+                    NotAfter = notAfter,
+                    NotBefore = DateTime.UtcNow
+                };
+
+                var certificateKeyPair = await GenerateKeyPair(newKey);
                 var serialNumber = GenerateSerialNumber(random);
                 var subject = DistinguishedName.BuildDistinguishedName(request.Subject);
-                var notAfter = DateTime.UtcNow.AddHours(request.LengthInHours);
-
                 var keyUsages = new List<KeyPurposeID>();
 
                 //TODO: There has to be a better way to do this...
@@ -104,7 +115,7 @@ namespace Notary.Service
                     serialNumber,
                     parentCert == null ? DistinguishedName.BuildDistinguishedName(request.Subject) : DistinguishedName.BuildDistinguishedName(parentCert.Subject),
                     notAfter,
-                    parentCert == null ? issuerKeyPair : certificateKeyPair,
+                    parentCert == null ? certificateKeyPair : issuerKeyPair,
                     issuerSn,
                     false,
                     keyUsages.ToArray()
@@ -117,10 +128,11 @@ namespace Notary.Service
                     Active = true,
                     Created = DateTime.UtcNow,
                     CreatedBySlug = request.RequestedBySlug,
-                    Data = generatedCertificate.GetEncoded(), //Get the DER encoded certificate binary and store it.
+                    Data = await ConvertX509ToPemAsync(generatedCertificate),
                     Issuer = parentCert == null ? request.Subject : parentCert.Subject,
                     IssuingSlug = request.ParentCertificateSlug,
                     KeyUsage = request.KeyUsage,
+                    KeySlug = newKey.Slug,
                     Name = request.Name,
                     NotAfter = notAfter,
                     NotBefore = DateTime.UtcNow,
@@ -149,7 +161,7 @@ namespace Notary.Service
 
             byte[] certificateBinary = null;
 
-            X509Certificate cert = GetX509FromBinary(certificate.Data);
+            X509Certificate cert = GetX509FromPem(certificate.Data);
             if (cert == null)
                 return null;
             cert.CheckValidity();
@@ -160,17 +172,7 @@ namespace Notary.Service
                     certificateBinary = cert.GetEncoded();
                     break;
                 case CertificateFormat.Pem:
-                    using (var stream = new MemoryStream())
-                    {
-                        using (TextWriter tw = new StreamWriter(stream))
-                        {
-                            var pw = new PemWriter(tw);
-                            pw.WriteObject(cert);
-                            await pw.Writer.FlushAsync();
-                        }
-
-                        certificateBinary = stream.ToArray();
-                    }
+                    certificateBinary = Encoding.Default.GetBytes(certificate.Data);
                     break;
                 case CertificateFormat.Pkcs12:
                     var certKey = await KeyService.GetKeyPairAsync(slug);
@@ -344,23 +346,9 @@ namespace Notary.Service
             return bouncyCert;
         }
 
-        private async Task<AsymmetricCipherKeyPair> GenerateKeyPair(CertificateRequest request, Algorithm keyAlgorithm, EllipticCurve? curve, int? keySize)
+        private async Task<AsymmetricCipherKeyPair> GenerateKeyPair(AsymmetricKey newKey)
         {
-            var notAfter = DateTime.UtcNow.AddHours(request.LengthInHours);
-            var newKey = new AsymmetricKey
-            {
-                Active = true,
-                Created = DateTime.UtcNow,
-                CreatedBySlug = "",
-                KeyAlgorithm = keyAlgorithm,
-                KeyCurve = curve,
-                KeyLength = keySize,
-                Name = "",
-                NotAfter = notAfter,
-                NotBefore = DateTime.UtcNow
-            };
-
-            await KeyService.SaveAsync(newKey, null);
+            await KeyService.SaveAsync(newKey, newKey.UpdatedBySlug);
 
             var keyPair = await KeyService.GetKeyPairAsync(newKey.Slug);
             return keyPair;
@@ -382,19 +370,6 @@ namespace Notary.Service
             byte[] hexBytes = Hex.Encode(digestedCert);
 
             return Encoding.ASCII.GetString(hexBytes);
-        }
-
-        /// <summary>
-        /// Convert raw binary data to a X.509 certificate object
-        /// </summary>
-        /// <param name="certificateData">The raw certificate binary</param>
-        /// <returns>An X.509 certificate or null if it is not on disk</returns>
-        private X509Certificate GetX509FromBinary(byte[] certificateData)
-        {
-            var parser = new X509CertificateParser();
-            X509Certificate cert = parser.ReadCertificate(certificateData);
-
-            return cert;
         }
 
         protected NotaryConfiguration Configuration { get; }

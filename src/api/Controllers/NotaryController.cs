@@ -14,6 +14,7 @@ namespace Notary.Api.Controllers
     public abstract class NotaryController : ControllerBase
     {
         protected ILog Log { get; }
+
         protected NotaryController(ILog log)
         {
             Log = log;
