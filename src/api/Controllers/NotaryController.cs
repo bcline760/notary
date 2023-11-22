@@ -10,7 +10,6 @@ using Notary.Logging;
 namespace Notary.Api.Controllers
 {
     [ApiController]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public abstract class NotaryController : ControllerBase
     {
         protected ILog Log { get; }
