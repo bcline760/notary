@@ -37,8 +37,7 @@ namespace Notary.Api.Controllers
         {
             try
             {
-
-                await Service.SaveAsync(contract, "system");
+                await Service.SaveAsync(contract, null);
                 return Created(Request.Path.ToUriComponent(), contract);
             }
             catch (Exception ex)

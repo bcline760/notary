@@ -17,14 +17,6 @@ namespace Notary.Api.Controllers
             CertificateService = certSerivce;
         }
 
-        //[Route("{slug}/certificate/{thumbprint}"), HttpGet]
-        //public async Task<IActionResult> GetCertificateAuthorityCertificate(string slug, string thumbprint)
-        //{
-        //    var service = (ICertificateAuthorityService)Service;
-
-        //    var ca = await service.GetAsync(slug);
-        //}
-
         [Route("{slug}/certificates"), HttpGet]
         public async Task<IActionResult> GetCertificates(string slug)
         {
@@ -36,30 +28,11 @@ namespace Notary.Api.Controllers
         }
 
         [Route("calist"), HttpGet]
-        public async Task<IActionResult> GetCaListBreif()
+        public async Task<IActionResult> GetCaListBrief()
         {
             var service = (ICertificateAuthorityService)Service;
 
             var result = await ExecuteServiceMethod(service.GetCaListBrief);
-
-            return result;
-        }
-
-        // [Authorize(Roles ="Notary.Admin")]
-        [Route("setup"), HttpPost]
-        public async Task<IActionResult> SetupCertificateAuthority(CertificateAuthoritySetup setup)
-        {
-            var service = (ICertificateAuthorityService)Service;
-
-            // if (!User.HasClaim(c => c.Type == "oid"))
-            // {
-            //     return BadRequest();
-            // }
-
-            // var userId = User.Claims.First(c => c.Type == "oid").Value;
-            setup.Requestor = "system";
-
-            var result = await ExecuteServiceMethod(service.SetupCertificateAuthority, setup, true);
 
             return result;
         }

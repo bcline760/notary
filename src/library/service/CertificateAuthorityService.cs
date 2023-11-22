@@ -24,96 +24,43 @@ namespace Notary.Service
             Configuration = config;
         }
 
-        public async Task SetupCertificateAuthority(CertificateAuthoritySetup setup)
+        public override async Task SaveAsync(CertificateAuthority entity, string updatedBySlug)
         {
-            if (setup == null)
-                throw new ArgumentNullException(nameof(setup));
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
 
-            if (setup.Algorithm == Algorithm.RSA && !setup.KeyLength.HasValue)
+            if (entity.KeyAlgorithm == Algorithm.RSA && !entity.KeyLength.HasValue)
                 throw new ArgumentException("Must supply a key length if using RSA");
 
             CertificateAuthority parentCa = null;
-            X509Certificate parentCertificate = null;
-            if (!string.IsNullOrEmpty(setup.ParentCaSlug))
+            if (!string.IsNullOrEmpty(entity.ParentCaSlug))
             {
-                parentCa = await Repository.GetAsync(setup.ParentCaSlug);
+                parentCa = await Repository.GetAsync(entity.ParentCaSlug);
                 if (parentCa == null)
                     throw new ArgumentNullException(nameof(parentCa));
-
-                var cert = await CertificateService.GetAsync(parentCa.CertificateSlug);
-                if (cert == null)
-                    throw new ArgumentNullException(nameof(cert));
-
-                parentCertificate = GetX509FromPem(cert.Data);
             }
 
             var now = DateTime.UtcNow;
             short keyUsageBits = (short)KeyPurposeFlags.CodeSigning;
 
-            DistinguishedName issuerDn = null;
-            var dn = new DistinguishedName
-            {
-                CommonName = setup.Name,
-                Country = setup.Country,
-                Locale = setup.Locale,
-                Organization = setup.Organization,
-                OrganizationalUnit = setup.OrganizationalUnit,
-                StateProvince = setup.StateProvince
-            };
-
-            if (parentCa != null)
-            {
-                issuerDn = new DistinguishedName
-                {
-                    CommonName = parentCa.DistinguishedName.CommonName,
-                    Country = parentCa.DistinguishedName.Country,
-                    Locale = parentCa.DistinguishedName.Locale,
-                    Organization = parentCa.DistinguishedName.Organization,
-                    OrganizationalUnit = parentCa.DistinguishedName.OrganizationalUnit,
-                    StateProvince = parentCa.DistinguishedName.StateProvince
-                };
-            }
-
             var caRequest = new CertificateRequest
             {
-                Curve = parentCa != null ? parentCa.KeyCurve : setup.Curve,
-                KeyAlgorithm = parentCa != null ? parentCa.KeyAlgorithm : setup.Algorithm,
-                KeySize = parentCa != null ? parentCa.KeyLength : setup.KeyLength,
+                Curve = parentCa != null ? parentCa.KeyCurve : entity.KeyCurve,
+                KeyAlgorithm = parentCa != null ? parentCa.KeyAlgorithm : entity.KeyAlgorithm,
+                KeySize = parentCa != null ? parentCa.KeyLength : entity.KeyLength,
                 KeyUsage = keyUsageBits,
                 LengthInHours = 87600, // 10 years
-                Name = setup.Name,
+                Name = entity.Name,
                 ParentCertificateSlug = parentCa != null ? parentCa.CertificateSlug : null,
-                RequestedBySlug = setup.Requestor,
-                Subject = dn
+                RequestedBySlug = entity.CreatedBySlug,
+                Subject = entity.DistinguishedName
             };
 
             var caCertificate = await CertificateService.IssueCertificateAsync(caRequest);
+            entity.IssuingDn = parentCa != null ? parentCa.DistinguishedName : null;
+            entity.CertificateSlug = caCertificate.Slug;
 
-            try
-            {
-
-                var ca = new CertificateAuthority
-                {
-                    CertificateSlug = caCertificate.Slug,
-                    DistinguishedName = dn,
-                    IsIssuer = setup.IsIssuer,
-                    IssuingDn = issuerDn,
-                    Active = true,
-                    Created = DateTime.UtcNow,
-                    CreatedBySlug = setup.Requestor,
-                    KeyAlgorithm = setup.Algorithm,
-                    KeyCurve = setup.Curve,
-                    KeyLength = setup.KeyLength,
-                    Name = setup.Name,
-                    ParentCaSlug = setup.ParentCaSlug
-                };
-
-                await SaveAsync(ca, setup.Requestor);
-            }
-            catch (Exception cex)
-            {
-                throw cex.IfNotLoggedThenLog(Logger);
-            }
+            await base.SaveAsync(entity, updatedBySlug);
         }
 
         public async Task<List<CaBrief>> GetCaListBrief()

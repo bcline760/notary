@@ -14,12 +14,5 @@ namespace Notary.Interface.Service
         /// </summary>
         /// <returns>A brief list of certificate authorities</returns>
         Task<List<CaBrief>> GetCaListBrief();
-
-        /// <summary>
-        /// Generate the CA certificates as needed for issuing certificates
-        /// </summary>
-        /// <param name="root"></param>
-        /// <param name="intermediate"></param>
-        Task SetupCertificateAuthority(CertificateAuthoritySetup setup);
     }
 }
