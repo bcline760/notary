@@ -79,32 +79,13 @@ namespace Notary.Service
                 var certificateKeyPair = await GenerateKeyPair(newKey);
                 var serialNumber = GenerateSerialNumber(random);
                 var subject = DistinguishedName.BuildDistinguishedName(request.Subject);
-                var keyUsages = new List<KeyPurposeID>();
+                var keyUsages = new List<DerObjectIdentifier>();
 
                 //TODO: There has to be a better way to do this...
-                if ((request.KeyUsage & (int)KeyPurposeFlags.ClientAuthentication) != 0)
-                    keyUsages.Add(KeyPurposeID.IdKPClientAuth);
-                if ((request.KeyUsage & (int)KeyPurposeFlags.CodeSigning) != 0)
-                    keyUsages.Add(KeyPurposeID.IdKPCodeSigning);
-                if ((request.KeyUsage & (int)KeyPurposeFlags.EmailProtection) != 0)
-                    keyUsages.Add(KeyPurposeID.IdKPEmailProtection);
-                if ((request.KeyUsage & (int)KeyPurposeFlags.IpsecEndSystem) != 0)
-                    keyUsages.Add(KeyPurposeID.IdKPIpsecEndSystem);
-                if ((request.KeyUsage & (int)KeyPurposeFlags.IpsecTunnel) != 0)
-                    keyUsages.Add(KeyPurposeID.IdKPIpsecTunnel);
-                if ((request.KeyUsage & (int)KeyPurposeFlags.IpsecUser) != 0)
-                    keyUsages.Add(KeyPurposeID.IdKPIpsecUser);
-                if ((request.KeyUsage & (int)KeyPurposeFlags.MacAddress) != 0)
-                    keyUsages.Add(KeyPurposeID.IdKPMacAddress);
-                if ((request.KeyUsage & (int)KeyPurposeFlags.OcspSigning) != 0)
-                    keyUsages.Add(KeyPurposeID.IdKPOcspSigning);
-                if ((request.KeyUsage & (int)KeyPurposeFlags.ServerAuthentication) != 0)
-                    keyUsages.Add(KeyPurposeID.IdKPServerAuth);
-                if ((request.KeyUsage & (int)KeyPurposeFlags.SmartCardLogon) != 0)
-                    keyUsages.Add(KeyPurposeID.IdKPSmartCardLogon);
-                if ((request.KeyUsage & (int)KeyPurposeFlags.TimeStamping) != 0)
-                    keyUsages.Add(KeyPurposeID.IdKPTimeStamping);
-
+                foreach (var ku in request.KeyUsages)
+                {
+                    var id = new DerObjectIdentifier(ku);
+                }
                 //Generate the certificate
                 var generatedCertificate = GenerateCertificate(
                     request.SubjectAlternativeNames,
@@ -131,7 +112,7 @@ namespace Notary.Service
                     Data = await ConvertX509ToPemAsync(generatedCertificate),
                     Issuer = parentCert == null ? request.Subject : parentCert.Subject,
                     IssuingSlug = request.ParentCertificateSlug,
-                    KeyUsage = request.KeyUsage,
+                    KeyUsages = request.KeyUsages,
                     KeySlug = newKey.Slug,
                     Name = request.Name,
                     NotAfter = notAfter,
@@ -233,7 +214,7 @@ namespace Notary.Service
         /// </summary>
         /// <param name="certificateGenerator"></param>
         /// <param name="usages"></param>
-        private void AddExtendedKeyUsage(X509V3CertificateGenerator certificateGenerator, KeyPurposeID[] usages)
+        private void AddExtendedKeyUsage(X509V3CertificateGenerator certificateGenerator, IEnumerable<DerObjectIdentifier> usages)
         {
             certificateGenerator.AddExtension(
                 X509Extensions.ExtendedKeyUsage.Id, false, new ExtendedKeyUsage(usages));
@@ -307,7 +288,7 @@ namespace Notary.Service
 
         private X509Certificate GenerateCertificate(List<SubjectAlternativeName> sanList, SecureRandom random, Algorithm alg,
             string subjectDn, AsymmetricCipherKeyPair subjectKeyPair, BigInteger subjectSn, string issuerDn, DateTime notAfter,
-            AsymmetricCipherKeyPair issuerKeyPair, BigInteger issuerSn, bool isCA, KeyPurposeID[] usages)
+            AsymmetricCipherKeyPair issuerKeyPair, BigInteger issuerSn, bool isCA, IEnumerable<DerObjectIdentifier> usages)
         {
             var certGen = new X509V3CertificateGenerator();
             var subject = new X509Name(subjectDn);

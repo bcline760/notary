@@ -126,7 +126,7 @@ public class CertificateAuthorityServiceTest : NotaryTest
                 OrganizationalUnit = "string",
                 StateProvince = "string"
             },
-            KeyUsage = 0,
+            KeyUsages = new List<string>(),
             Name = "string",
             NotAfter = DateTime.MaxValue,
             NotBefore = DateTime.MinValue,

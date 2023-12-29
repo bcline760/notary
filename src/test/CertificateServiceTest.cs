@@ -53,7 +53,7 @@ public class CertificateServiceTest
                 OrganizationalUnit = It.IsAny<string>(),
                 StateProvince = It.IsAny<string>()
             },
-            KeyUsage = It.IsAny<short>(),
+            KeyUsages = It.IsAny<List<string>>(),
             Name = It.IsAny<string>(),
             NotAfter = DateTime.MaxValue,
             NotBefore = DateTime.MinValue,
@@ -123,7 +123,7 @@ public class CertificateServiceTest
             Curve = null,
             KeyAlgorithm = Algorithm.RSA,
             KeySize = It.IsAny<int>(),
-            KeyUsage = It.IsAny<short>(),
+            KeyUsages = It.IsAny<List<string>>(),
             LengthInHours = It.IsAny<int>(),
             Name = It.IsAny<string>(),
             RequestedBySlug = It.IsAny<string>(),

@@ -26,7 +26,7 @@ namespace Notary.Contract
         public int? KeySize { get; set; }
 
         [DataMember]
-        public short KeyUsage { get; set; }
+        public List<string> KeyUsages { get; set; }
 
         /// <summary>
         /// Get or set the expiration length in hours.

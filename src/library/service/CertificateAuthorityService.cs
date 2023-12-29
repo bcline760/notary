@@ -41,14 +41,16 @@ namespace Notary.Service
             }
 
             var now = DateTime.UtcNow;
-            short keyUsageBits = (short)KeyPurposeFlags.CodeSigning;
 
             var caRequest = new CertificateRequest
             {
                 Curve = parentCa != null ? parentCa.KeyCurve : entity.KeyCurve,
                 KeyAlgorithm = parentCa != null ? parentCa.KeyAlgorithm : entity.KeyAlgorithm,
                 KeySize = parentCa != null ? parentCa.KeyLength : entity.KeyLength,
-                KeyUsage = keyUsageBits,
+                KeyUsages = new List<string>
+                {
+                    "1.3.6.1.5.5.7.3.3" //Code signing
+                },
                 LengthInHours = 87600, // 10 years
                 Name = entity.Name,
                 ParentCertificateSlug = parentCa != null ? parentCa.CertificateSlug : null,

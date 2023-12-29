@@ -19,7 +19,7 @@ namespace Notary.Model
             Data = contract.Data;
             IssuingSlug = contract.IssuingSlug;
             IsCaCertificate = contract.IsCaCertificate;
-            KeyUsage = contract.KeyUsage;
+            KeyUsages = contract.KeyUsages;
             Issuer = new DistinguishedNameModel(contract.Issuer);
             Name = contract.Name;
             NotAfter = contract.NotAfter;
@@ -45,7 +45,7 @@ namespace Notary.Model
         public string IssuingSlug { get; set; }
 
         [BsonElement("key_usage"), BsonRequired]
-        public short KeyUsage { get; set; }
+        public List<string> KeyUsages { get; set; }
 
         [BsonElement("key_slug"), BsonRequired]
         public string KeySlug { get; set; }

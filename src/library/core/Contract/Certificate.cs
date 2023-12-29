@@ -23,6 +23,7 @@ namespace Notary.Contract
             Data = model.Data;
             IssuingSlug = model.IssuingSlug;
             IsCaCertificate = model.IsCaCertificate;
+            KeyUsages = model.KeyUsages;
             Name = model.Name;
             NotAfter = model.NotAfter;
             NotBefore = model.NotBefore;
@@ -91,7 +92,7 @@ namespace Notary.Contract
         public string KeySlug { get; set; }
 
         [JsonProperty("key_usage", Required = Required.Always)]
-        public short KeyUsage
+        public List<string> KeyUsages
         {
             get; set;
         }
