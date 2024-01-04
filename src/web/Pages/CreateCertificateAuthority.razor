@@ -1,0 +1,299 @@
+﻿@page "/ca/create"
+@using C=Notary.Contract
+@using Notary.Interface.Service
+@using Notary.Web.ViewModels
+@inject ICertificateAuthorityService CertificateAuthorityService
+@inject NavigationManager NavigationManager
+
+@if (ViewModel.CertificateAuthorities == null)
+{
+    <p><em>Wait...</em></p>
+}
+else
+{
+    <EditForm OnValidSubmit="OnSubmitValidAsync" Model="ViewModel">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="row g-3 align-items-center mb-3">
+            <div class="col-2">
+                <label class="form-label" for="caSelect">Parent CA</label>
+            </div>
+            <div class="col">
+                <InputSelect class="form-select form-select-sm" id="caSelect" TValue="string" Value="ViewModel.ParentCaSlug" ValueChanged="args => OnParentCaListChange(args)"
+                             aria-describedby="caSelectHelp" DisplayName="Certificate Authority" ValueExpression="@(()=>ViewModel.ParentCaSlug)">
+                    <option value="">No Parent</option>
+                    @foreach (var ca in ViewModel.CertificateAuthorities)
+                    {
+                        <option value="@ca.Slug">@ca.Name</option>
+                    }
+                </InputSelect>
+                <div id="caSelectHelp" class="form-text">
+                    Select a parent CA
+                </div>
+            </div>
+        </div>
+        <div class="row g-3 align-items-center mb-3">
+            <div class="col-2">
+                <label class="form-label" for="name">Name</label>
+            </div>
+            <div class="col">
+                <InputText @bind-Value="ViewModel.Name" class="form-control form-control-sm" id="name" DisplayName="Name"></InputText>
+            </div>
+        </div>
+        <div class="row g-3 align-items-center mb-3">
+            <div class="col-2">
+                <label class="form-label">Additional Subject</label>
+            </div>
+            <div class="col">
+                <a data-bs-toggle="collapse" href="#subjectCollapse" role="link" aria-expanded="false" aria-controls="subjectCollapse">Expand</a>
+                <div class="collapse" id="subjectCollapse">
+                    @if (ViewModel.SelectedCa == null)
+                    {
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">Country</label>
+                            </div>
+                            <div class="col">
+                                <InputText @bind-Value="ViewModel.Country" class="form-control form-control-sm" id="state" DisplayName="Country"></InputText>
+                            </div>
+                        </div>
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">Locale</label>
+                            </div>
+                            <div class="col">
+                                <InputText @bind-Value="ViewModel.Locale" class="form-control form-control-sm" id="locale" DisplayName="Locale"></InputText>
+                            </div>
+                        </div>
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">Organization</label>
+                            </div>
+                            <div class="col">
+                                <InputText @bind-Value="ViewModel.Organization" class="form-control form-control-sm" id="organization" DisplayName="Organization"></InputText>
+                            </div>
+                        </div>
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">Organizational Unit</label>
+                            </div>
+                            <div class="col">
+                                <InputText @bind-Value="ViewModel.OrganizationalUnit" class="form-control form-control-sm" id="orgUnit" DisplayName="Organizational Unit"></InputText>
+                            </div>
+                        </div>
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">State</label>
+                            </div>
+                            <div class="col">
+                                <InputText @bind-Value="ViewModel.StateProvince" class="form-control form-control-sm" id="state" DisplayName="State/Province"></InputText>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">Country</label>
+                            </div>
+                            <div class="col">
+                                @ViewModel.SelectedCa.DistinguishedName.Country
+                            </div>
+                        </div>
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">Locale</label>
+                            </div>
+                            <div class="col">
+                                @ViewModel.SelectedCa.DistinguishedName.Locale
+                            </div>
+                        </div>
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">Organization</label>
+                            </div>
+                            <div class="col">
+                                @ViewModel.SelectedCa.DistinguishedName.Organization
+                            </div>
+                        </div>
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">Organizational Unit</label>
+                            </div>
+                            <div class="col">
+                                @ViewModel.SelectedCa.DistinguishedName.OrganizationalUnit
+                            </div>
+                        </div>
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">State</label>
+                            </div>
+                            <div class="col">
+                                @ViewModel.SelectedCa.DistinguishedName.StateProvince
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        
+        <div class="row g-3 align-items-center mb-3">
+            <div class="col-2">
+                <label for="caLength" class="form-label">Length</label>
+            </div>
+            <div class="col">
+                <InputNumber @bind-Value="ViewModel.LengthInYears" class="form-control form-control-sm" id="caLength" DisplayName="Expiry length"></InputNumber>
+            </div>
+        </div>
+        <div class="row g-3 align-items-center mb-3">
+            <div class="col-2">
+                <label for="caLength" class="form-label">Can Issue</label>
+            </div>
+            <div class="col">
+                <div class="form-check">
+                    <InputCheckbox DisplayName="Can Issue" @bind-Value="ViewModel.IsIssuer" class="form-check-input"></InputCheckbox>
+                    <label class="form-check-label">Can Issue</label>
+                </div>
+                <div class="form-text">
+                    Set to true to allow the CA to be able to issue certificates. Typical use case for "false" is like a root CA.
+                </div>
+            </div>
+        </div>
+        <div class="row g-3 align-items-center mb-3">
+            <div class="col-2">
+                <label class="form-label">Key Algorithm</label>
+            </div>
+            <div class="col">
+                <InputRadioGroup Name="keyAlgorithm" @bind-Value="ViewModel.Algorithm" DisplayName="Key algorithm">
+                    <div class="form-check form-check-inline">
+                        <InputRadio Name="keyAlgorithm" TValue="Algorithm" Value="Algorithm.RSA" class="form-check-input" id="inputRsa" />
+                        <label class="form-check-label" for="inputRsa">RSA</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <InputRadio Name="keyAlgorithm" TValue="Algorithm" Value="Algorithm.EllipticCurve" class="form-check-input" id="inputEc" />
+                        <label class="form-check-label" for="inputEc">Elliptic Curve</label>
+                    </div>
+                </InputRadioGroup>
+            </div>
+        </div>
+        @if (ViewModel.Algorithm == Algorithm.RSA)
+        {
+            <div class="row g-3 align-items-center mb-3">
+                <div class="col-2">
+                    <label for="rsaKeySize" class="form-label">RSA Key Size</label>
+                </div>
+                <div class="col">
+                    <InputRadioGroup Name="rsaKeySize" @bind-Value="ViewModel.KeyLength" DisplayName="RSA Key Size">
+                        <div class="form-check form-check-inline">
+                            <InputRadio Name="rsaKeySize" TValue="int" Value="2048" class="form-check-input" />
+                            <label class="form-check-label">2048 bit</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <InputRadio Name="rsaKeySize" TValue="int" Value="3072" class="form-check-input" />
+                            <label class="form-check-label">3072 bit</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <InputRadio Name="rsaKeySize" TValue="int" Value="4096" class="form-check-input" />
+                            <label class="form-check-label">4096 bit</label>
+                        </div>
+                    </InputRadioGroup>
+                    <div class="form-text">
+                        RSA (Rivest–Shamir–Adleman) is a very common, but older, asymmetric encryption algorithm. Its complexity depends on the length of
+                        the key. Bigger the key, the more difficult it is to crack, but slower to encrypt/decrypt.
+                    </div>
+                </div>
+            </div>
+        }
+        else if (ViewModel.Algorithm == Algorithm.EllipticCurve)
+        {
+            <div class="row g-3 align-items-center mb-3">
+                <div class="col-2">
+                    <label class="form-label">Curve</label>
+                </div>
+                <div class="col">
+                    <InputRadioGroup Name="ellipticCurve" @bind-Value="ViewModel.Curve" DisplayName="Elliptic Curve">
+                        <div class="form-check form-check-inline">
+                            <InputRadio Name="ellipticCurve" TValue="EllipticCurve" Value="EllipticCurve.P256" class="form-check-input" id="inputP256" />
+                            <label class="form-check-label" for="inputP256">P256</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <InputRadio Name="ellipticCurve" TValue="EllipticCurve" Value="EllipticCurve.P384" class="form-check-input" id="inputP384" />
+                            <label class="form-check-label" for="inputP384">P384</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <InputRadio Name="ellipticCurve" TValue="EllipticCurve" Value="EllipticCurve.P521" class="form-check-input" id="inputP521" />
+                            <label class="form-check-label" for="inputP521">P521</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <InputRadio Name="ellipticCurve" TValue="EllipticCurve" Value="EllipticCurve.P256K" class="form-check-input" id="inputP256K" />
+                            <label class="form-check-label" for="inputP256K">P256K</label>
+                        </div>
+                    </InputRadioGroup>
+                    <div class="form-text">
+                        Elliptic Curve Cryptography is a newer algorithm based on elliptic curves over finite fields. Keys are smaller than RSA and crytographic operations
+                        are quicker than RSA. However, not as widely adopted as RSA
+                    </div>
+                </div>
+            </div>
+        }
+        <div class="row g-3 align-items-center mb-3">
+            <div class="col-2">
+                &nbsp;
+            </div>
+            <div class="col">
+                <input type="submit" class="btn btn-primary" value="Create CA" />
+                &nbsp;
+                <input type="reset" class="btn btn-outline-secondary" value="Reset" />
+            </div>
+        </div>
+    </EditForm>
+}
+
+@code {
+    private CreateCertificateAuthorityViewModel ViewModel { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ViewModel.CertificateAuthorities = await CertificateAuthorityService.GetAllAsync();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task OnSubmitValidAsync()
+    {
+        var ca = new C.CertificateAuthority
+            {
+                Active = true,
+                Created = DateTime.UtcNow,
+                IsIssuer = ViewModel.IsIssuer,
+                KeyAlgorithm = ViewModel.Algorithm,
+                KeyCurve = ViewModel.Curve,
+                KeyLength = ViewModel.KeyLength,
+                LengthInYears = ViewModel.LengthInYears,
+                Name = ViewModel.Name,
+                ParentCaSlug = ViewModel.ParentCaSlug,
+                Updated = DateTime.UtcNow,
+                DistinguishedName = new C.DistinguishedName
+                {
+                    CommonName = ViewModel.Name,
+                    Country = ViewModel.SelectedCa != null ? ViewModel.SelectedCa.DistinguishedName.Country : ViewModel.Country,
+                    Locale = ViewModel.SelectedCa != null ? ViewModel.SelectedCa.DistinguishedName.Locale : ViewModel.Locale,
+                    Organization = ViewModel.SelectedCa != null ? ViewModel.SelectedCa.DistinguishedName.Organization : ViewModel.Organization,
+                    OrganizationalUnit = ViewModel.SelectedCa != null ? ViewModel.SelectedCa.DistinguishedName.OrganizationalUnit : ViewModel.OrganizationalUnit,
+                    StateProvince = ViewModel.SelectedCa != null ? ViewModel.SelectedCa.DistinguishedName.StateProvince : ViewModel.StateProvince
+                }
+            };
+
+        await CertificateAuthorityService.SaveAsync(ca, null);
+        NavigationManager.NavigateTo("ca");
+    }
+
+    private async Task OnParentCaListChange(string slug)
+    {
+        if (slug == null)
+            return;
+
+        ViewModel.ParentCaSlug = slug;
+        ViewModel.SelectedCa = slug == string.Empty ? null : await CertificateAuthorityService.GetAsync(slug);
+    }
+}

@@ -1,0 +1,387 @@
+﻿@page "/certificates/create"
+@using Notary
+@using C=Notary.Contract
+@using Notary.Interface.Service
+@using Notary.Web.ViewModels
+@inject ICertificateService CertificateService
+@inject ICertificateAuthorityService CertificateAuthorityService
+@inject NavigationManager NavigationManager
+
+@if (caList == null)
+{
+    <p><em>Wait</em></p>
+}
+else
+{
+    <div class="row g-3">
+        <div class="col-9">
+            <EditForm OnValidSubmit="SubmitAsync" Model="Model">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="row g-3 align-items-center mb-3">
+                    <div class="col-2">
+                        <label class="form-label" for="caSelect">Certificate Authority</label>
+                    </div>
+                    <div class="col">
+                        <InputSelect class="form-select form-select-sm"
+                                     id="caSelect" TValue="string"
+                                     Value="Model.CertificateAuthoritySlug"
+                                     ValueChanged="args => OnCaListChange(args)"
+                                     aria-describedby="caSelectHelp"
+                                     DisplayName="Certificate Authority"
+                                     ValueExpression="@(()=>Model.CertificateAuthoritySlug)">
+                            <option value="self" selected>Self-signed Certificate</option>
+                            @foreach (var ca in caList)
+                            {
+                                <option value="@ca.Slug">@ca.Name</option>
+                            }
+                        </InputSelect>
+                        <div id="caSelectHelp" class="form-text">
+                            Select a CA or choose "self-signed"
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-3 align-items-center mb-3">
+                    <div class="col-2">
+                        <label class="form-label" for="name">Name</label>
+                    </div>
+                    <div class="col">
+                        <InputText @bind-Value="Model.Name" class="form-control form-control-sm" id="name" DisplayName="Name"></InputText>
+                    </div>
+                </div>
+                <div class="row g-3 align-items-center mb-3">
+                    <div class="col-2">
+                        <label class="form-label" for="subject">Common Name</label>
+                    </div>
+                    <div class="col">
+                        <InputText @bind-Value="Model.Subject.CommonName" class="form-control form-control-sm" id="subject" DisplayName="Common Name"></InputText>
+                        <a data-bs-toggle="collapse" href="#subjectCollapse" role="link" aria-expanded="false" aria-controls="subjectCollapse">Additional Subject Attributes</a>
+                    </div>
+                </div>
+                <div class="collapse" id="subjectCollapse">
+                    @if (Model.SelectedCa == null)
+                    {
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">Country</label>
+                            </div>
+                            <div class="col">
+                                <InputText @bind-Value="Model.Subject.Country" class="form-control form-control-sm" id="country" DisplayName="Country"></InputText>
+                            </div>
+                        </div>
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">Locale</label>
+                            </div>
+                            <div class="col">
+                                <InputText @bind-Value="Model.Subject.Locale" class="form-control form-control-sm" id="locale" DisplayName="Locale"></InputText>
+                            </div>
+                        </div>
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">Organization</label>
+                            </div>
+                            <div class="col">
+                                <InputText @bind-Value="Model.Subject.Organization" class="form-control form-control-sm" id="organization" DisplayName="Organization"></InputText>
+                            </div>
+                        </div>
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">Organizational Unit</label>
+                            </div>
+                            <div class="col">
+                                <InputText @bind-Value="Model.Subject.OrganizationalUnit" class="form-control form-control-sm" id="orgUnit" DisplayName="Organizational Unit"></InputText>
+                            </div>
+                        </div>
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">State</label>
+                            </div>
+                            <div class="col">
+                                <InputText @bind-Value="Model.Subject.StateProvince" class="form-control form-control-sm" id="state" DisplayName="State/Province"></InputText>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">Country</label>
+                            </div>
+                            <div class="col">
+                                @Model.SelectedCa.DistinguishedName.Country
+                            </div>
+                        </div>
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">Locale</label>
+                            </div>
+                            <div class="col">
+                                @Model.SelectedCa.DistinguishedName.Locale
+                            </div>
+                        </div>
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">Organization</label>
+                            </div>
+                            <div class="col">
+                                @Model.SelectedCa.DistinguishedName.Organization
+                            </div>
+                        </div>
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">Organizational Unit</label>
+                            </div>
+                            <div class="col">
+                                @Model.SelectedCa.DistinguishedName.OrganizationalUnit
+                            </div>
+                        </div>
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">State</label>
+                            </div>
+                            <div class="col">
+                                @Model.SelectedCa.DistinguishedName.StateProvince
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="row g-3 align-items-center mb-3">
+                    <div class="col-2">
+                        <label for="" class="form-label">Length</label>
+                    </div>
+                    <div class="col">
+                        <InputNumber @bind-Value="Model.ExpiryLength" class="form-control form-control-sm" id="certificateLength" DisplayName="Expiry length"></InputNumber>
+                    </div>
+                </div>
+                @if (Model.SelectedCa == null)
+                {
+                    <div class="row g-3 align-items-center mb-3">
+                        <div class="col-2">
+                            <label class="form-label">Key Algorithm</label>
+                        </div>
+                        <div class="col">
+                            <InputRadioGroup Name="keyAlgorithm" @bind-Value="Model.KeyAlgorithm" DisplayName="Key algorithm">
+                                <div class="form-check form-check-inline">
+                                    <InputRadio Name="keyAlgorithm" TValue="Algorithm" Value="Algorithm.RSA" class="form-check-input" id="inputRsa" />
+                                    <label class="form-check-label" for="inputRsa">RSA</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <InputRadio Name="keyAlgorithm" TValue="Algorithm" Value="Algorithm.EllipticCurve" class="form-check-input" id="inputEc" />
+                                    <label class="form-check-label" for="inputEc">Elliptic Curve</label>
+                                </div>
+                            </InputRadioGroup>
+                        </div>
+                    </div>
+                    @if (Model.KeyAlgorithm == Algorithm.RSA)
+                    {
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label for="rsaKeySize" class="form-label">RSA Key Size</label>
+                            </div>
+                            <div class="col">
+                                <InputRadioGroup Name="rsaKeySize" @bind-Value="Model.KeySize" DisplayName="RSA Key Size">
+                                    <div class="form-check form-check-inline">
+                                        <InputRadio Name="rsaKeySize" TValue="int" Value="2048" class="form-check-input" />
+                                        <label class="form-check-label">2048 bit</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <InputRadio Name="rsaKeySize" TValue="int" Value="3072" class="form-check-input" />
+                                        <label class="form-check-label">3072 bit</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <InputRadio Name="rsaKeySize" TValue="int" Value="4096" class="form-check-input" />
+                                        <label class="form-check-label">4096 bit</label>
+                                    </div>
+                                </InputRadioGroup>
+                                <div class="form-text">
+                                    RSA (Rivest–Shamir–Adleman) is a very common, but older, asymmetric encryption algorithm. Its complexity depends on the length of
+                                    the key. Bigger the key, the more difficult it is to crack, but slower to encrypt/decrypt.
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else if (Model.KeyAlgorithm == Algorithm.EllipticCurve)
+                    {
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-2">
+                                <label class="form-label">Curve</label>
+                            </div>
+                            <div class="col">
+                                <InputRadioGroup Name="ellipticCurve" @bind-Value="Model.Curve" DisplayName="Elliptic Curve">
+                                    <div class="form-check form-check-inline">
+                                        <InputRadio Name="ellipticCurve" TValue="EllipticCurve" Value="EllipticCurve.P256" class="form-check-input" id="inputP256" />
+                                        <label class="form-check-label" for="inputP256">P256</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <InputRadio Name="ellipticCurve" TValue="EllipticCurve" Value="EllipticCurve.P384" class="form-check-input" id="inputP384" />
+                                        <label class="form-check-label" for="inputP384">P384</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <InputRadio Name="ellipticCurve" TValue="EllipticCurve" Value="EllipticCurve.P521" class="form-check-input" id="inputP521" />
+                                        <label class="form-check-label" for="inputP521">P521</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <InputRadio Name="ellipticCurve" TValue="EllipticCurve" Value="EllipticCurve.P256K" class="form-check-input" id="inputP256K" />
+                                        <label class="form-check-label" for="inputP256K">P256K</label>
+                                    </div>
+                                </InputRadioGroup>
+                                <div class="form-text">
+                                    Elliptic Curve Cryptography is a newer algorithm based on elliptic curves over finite fields. Keys are smaller than RSA and crytographic operations
+                                    are quicker than RSA. However, not as widely adopted as RSA
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="row g-3 align-items-center mb-3">
+                        <div class="col-2">
+                            <label class="form-label">Algorithm</label>
+                        </div>
+                        <div class="col">
+                            @Model.SelectedCa.KeyAlgorithm.ToString()
+                        </div>
+                    </div>
+                    <div class="row g-3 align-items-center mb-3">
+                        @if (Model.SelectedCa.KeyAlgorithm == Algorithm.RSA)
+                        {
+                            <div class="col-2">
+                                <label class="form-label">Key Size</label>
+                            </div>
+                            <div class="col">
+                                @Model.SelectedCa.KeyLength bit
+                            </div>
+                        }
+                        else if (Model.SelectedCa.KeyAlgorithm == Algorithm.EllipticCurve)
+                        {
+                            <div class="col-2">
+                                <label class="form-label">Key Size</label>
+                            </div>
+                            <div class="col">
+                                @Model.SelectedCa.KeyCurve
+                            </div>
+                        }
+                    </div>
+                }
+                <div class="row g-3 align-items-center mb-3">
+                    <div class="col-2">
+                        <label class="form-label">Key Usages</label>
+                    </div>
+                    <div class="col">
+                        @foreach (var item in Model.KeyUsages)
+                        {
+                            <div class="form-check">
+                                <input type="checkbox" @onchange="args=>OnKeyUsageChange(args, item.Key)" class="form-input-check" />
+                                <label class="form-check-label">@item.Value</label>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+
+                <div class="row g-3 align-items-center mb-3">
+                    <div class="col-2">
+                        <label class="form-label">SAN List</label>
+                    </div>
+                    <div class="col">
+                        @foreach (var san in Model.SubjectAlternativeNames)
+                        {
+                            <div class="row g-3 mb-3">
+                                <div class="col-auto">
+                                    @san.Name
+                                </div>
+                                <div class="col-auto">
+                                    @san.Kind
+                                </div>
+                                <div class="col-auto">
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="row g-3 align-items-center mb-3">
+                    <div class="col-2">
+                        &nbsp;
+                    </div>
+                    <div class="col">
+                        <input type="submit" class="btn btn-primary" value="Issue Certificate" />
+                        &nbsp;
+                        <input type="reset" class="btn btn-outline-secondary" value="Reset" />
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+        <div class="col-3">
+            &nbsp;
+        </div>
+    </div>
+
+}
+@code {
+    private CreateCertificateViewModel Model { get; set; } = new();
+    private IEnumerable<C.CertificateAuthority>? caList;
+
+    protected override async Task OnInitializedAsync()
+    {
+        caList = await CertificateAuthorityService.GetAllAsync();
+        caList = caList.Where(ca => ca.IsIssuer); //Only issuers can issue certificates
+    }
+
+    private async Task SubmitAsync()
+    {
+        var request = new C.CertificateRequest
+            {
+                IsCaCertificate = false,
+                KeyUsages = Model.SelectedKeyUsages,
+                LengthInHours = Model.ExpiryLength * 8760,
+                Name = Model.Name,
+            };
+
+        // Should probably refactor this into service.
+        if (Model.SelectedCa != null)
+        {
+            request.Curve = Model.SelectedCa.KeyCurve;
+            request.KeyAlgorithm = Model.SelectedCa.KeyAlgorithm;
+            request.KeySize = Model.SelectedCa.KeyLength;
+            request.ParentCertificateSlug = Model.SelectedCa.CertificateSlug;
+            request.Subject = Model.SelectedCa.DistinguishedName;
+            request.Subject.CommonName = Model.Subject.CommonName;
+        }
+        else
+        {
+            request.Curve = Model.Curve;
+            request.KeyAlgorithm = Model.KeyAlgorithm;
+            request.KeySize = Model.KeySize;
+            request.Subject = Model.Subject;
+        }
+        var certificate = await CertificateService.IssueCertificateAsync(request);
+        if (certificate != null)
+        {
+            NavigationManager.NavigateTo("certificates");
+        }
+    }
+
+    private async Task OnKeyUsageChange(ChangeEventArgs args, string selectedKeyUsage)
+    {
+        if (args == null || args.Value == null)
+            return;
+
+        bool selected = (bool)args.Value;
+        if (selected)
+            Model.SelectedKeyUsages.Add(selectedKeyUsage);
+        else
+            Model.SelectedKeyUsages.Remove(selectedKeyUsage);
+    }
+
+    private async Task OnCaListChange(string slug)
+    {
+        if (slug == null)
+            return;
+
+        Model.CertificateAuthoritySlug = slug;
+        Model.SelectedCa = slug == "self" ? null : await CertificateAuthorityService.GetAsync(slug);
+    }
+}

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Configuration;
 using System.Runtime.Serialization;
 
 using Newtonsoft.Json;
@@ -14,12 +16,12 @@ namespace Notary.Contract
         }
 
         [DataMember]
-        public string CertificatePassword { get; set; }
-
-        [DataMember]
         public EllipticCurve? Curve { get; set; }
 
-        [DataMember]
+        [DataMember, Required]
+        public bool IsCaCertificate { get; set; }
+
+        [DataMember, Required]
         public Algorithm KeyAlgorithm { get; set; }
 
         [DataMember]
@@ -31,13 +33,13 @@ namespace Notary.Contract
         /// <summary>
         /// Get or set the expiration length in hours.
         /// </summary>
-        [DataMember]
+        [DataMember, Required, Range(8760, 87600, ErrorMessage = "Must be from 1 to 10 years")]
         public int LengthInHours { get; set; }
 
         /// <summary>
         /// Get or set the display name of the certificate
         /// </summary>
-        [DataMember]
+        [DataMember, Required, RegularExpression("[a-zA-Z0-9\\s]+", ErrorMessage = "Only alphanumerics plus spaces allowed")]
         public string Name { get; set; }
 
         [DataMember]

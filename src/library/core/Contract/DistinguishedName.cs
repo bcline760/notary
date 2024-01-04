@@ -1,4 +1,5 @@
-﻿using System.Runtime.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Runtime.Serialization;
 using System.Text;
 
 using Newtonsoft.Json;
@@ -10,7 +11,7 @@ namespace Notary.Contract
     /// </summary>
     public class DistinguishedName
     {
-        [JsonProperty("cn", Required = Required.Always)]
+        [JsonProperty("cn", Required = Required.Always), Required]
         public string CommonName
         {
             get;set;

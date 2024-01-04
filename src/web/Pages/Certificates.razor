@@ -1,0 +1,94 @@
+﻿@page "/certificates"
+@using Notary
+@using Notary.Contract
+@using Notary.Interface.Service
+@using Notary.Web.ViewModels
+@inject IJSRuntime JS
+@inject ICertificateService CertificateService
+@inject NavigationManager NavigationManager
+<PageTitle>Certificates</PageTitle>
+
+<div class="row">
+    <div class="col">&nbsp;</div>
+    <div class="col">&nbsp;</div>
+    <div class="col">
+        <input type="button" class="btn btn-outline-primary" value="Create Certificate" @onclick="OnCreateCertificateClick" />
+    </div>
+</div>
+@if (certificates == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (certificates != null && certificates.Count() > 0)
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Good From</th>
+                <th>Good Until</th>
+                <th>Serial Number</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var certificate in certificates)
+            {
+                <tr>
+                    <td>@certificate.Name</td>
+                    <td>@certificate.NotBefore</td>
+                    <td>@certificate.NotAfter</td>
+                    <td>@certificate.SerialNumber</td>
+                    <td>
+                        <button type="button" class="btn btn-link link-info" aria-label="Certificate Info" data-bs-slug="@certificate.Slug">
+                            <i class="fa-sharp fa-light fa-certificate"></i>
+                        </button>
+                        <button type="button" class="btn btn-link link-secondary" @onclick="()=>OnCertificateDownloadClick(certificate.Slug)"
+                            aria-label="Download Certificate" data-bs-slug="@certificate.Slug">
+                            <i class="fa-sharp fa-light fa-download"></i>
+                        </button>
+                        <button type="button" class="btn btn-link link-danger" aria-label="Delete Certificate" data-bs-slug="@certificate.Slug">
+                            <i class="fa-sharp fa-light fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p><em>No certificates were found, try creating some!</em></p>
+}
+
+@code {
+    private DownloadCertificateViewModel DownloadModel { get; set; } = new();
+
+    private IEnumerable<Certificate>? certificates;
+
+    protected override async Task OnInitializedAsync()
+    {
+        certificates = await CertificateService.GetAllAsync();
+        certificates = certificates.Where(c => !c.IsCaCertificate);
+    }
+
+    private void OnCreateCertificateClick()
+    {
+        NavigationManager.NavigateTo("certificates/create");
+    }
+
+    private async Task OnCertificateDownloadClick(string slug)
+    {
+        var cert = await CertificateService.GetAsync(slug);
+        var filename = $"{cert.Name}.cer";
+        var certBinary = await CertificateService.RequestCertificateAsync(slug, CertificateFormat.Der, null);
+        if (certBinary != null)
+        {
+            using (var stream = new MemoryStream(certBinary))
+            {
+                using var streamRef = new DotNetStreamReference(stream, false);
+                await JS.InvokeVoidAsync("downloadFileFromStream", filename, streamRef);
+            }
+        }
+    }
+}

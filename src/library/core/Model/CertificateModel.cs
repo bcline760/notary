@@ -19,6 +19,7 @@ namespace Notary.Model
             Data = contract.Data;
             IssuingSlug = contract.IssuingSlug;
             IsCaCertificate = contract.IsCaCertificate;
+            KeySlug = contract.KeySlug;
             KeyUsages = contract.KeyUsages;
             Issuer = new DistinguishedNameModel(contract.Issuer);
             Name = contract.Name;

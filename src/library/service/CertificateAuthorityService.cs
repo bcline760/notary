@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using log4net;
+
 using Notary.Configuration;
 using Notary.Contract;
 using Notary.Interface.Repository;
@@ -38,20 +40,26 @@ namespace Notary.Service
                 parentCa = await Repository.GetAsync(entity.ParentCaSlug);
                 if (parentCa == null)
                     throw new ArgumentNullException(nameof(parentCa));
+
+                entity.KeyCurve = parentCa.KeyCurve;
+                entity.KeyAlgorithm = parentCa.KeyAlgorithm;
+                entity.KeyLength = parentCa.KeyLength;
+                entity.ParentCaSlug = parentCa.Slug;
             }
 
             var now = DateTime.UtcNow;
 
             var caRequest = new CertificateRequest
             {
-                Curve = parentCa != null ? parentCa.KeyCurve : entity.KeyCurve,
-                KeyAlgorithm = parentCa != null ? parentCa.KeyAlgorithm : entity.KeyAlgorithm,
-                KeySize = parentCa != null ? parentCa.KeyLength : entity.KeyLength,
+                Curve = entity.KeyCurve,
+                IsCaCertificate = true,
+                KeyAlgorithm = entity.KeyAlgorithm,
+                KeySize = entity.KeyLength,
                 KeyUsages = new List<string>
                 {
                     "1.3.6.1.5.5.7.3.3" //Code signing
                 },
-                LengthInHours = 87600, // 10 years
+                LengthInHours = 8760 * entity.LengthInYears,
                 Name = entity.Name,
                 ParentCertificateSlug = parentCa != null ? parentCa.CertificateSlug : null,
                 RequestedBySlug = entity.CreatedBySlug,

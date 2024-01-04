@@ -87,6 +87,9 @@ namespace Notary.Contract
         public int? KeyLength { get; set; }
 
         [DataMember]
+        public int LengthInYears { get; set; }
+
+        [DataMember]
         public string Name { get; set; }
 
         [DataMember]

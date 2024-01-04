@@ -23,6 +23,7 @@ namespace Notary.Contract
             Data = model.Data;
             IssuingSlug = model.IssuingSlug;
             IsCaCertificate = model.IsCaCertificate;
+            KeySlug = model.KeySlug;
             KeyUsages = model.KeyUsages;
             Name = model.Name;
             NotAfter = model.NotAfter;

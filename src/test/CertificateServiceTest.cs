@@ -119,7 +119,6 @@ public class CertificateServiceTest
         return new CertificateRequest
         {
             ParentCertificateSlug = It.IsAny<string>(),
-            CertificatePassword = It.IsAny<string>(),
             Curve = null,
             KeyAlgorithm = Algorithm.RSA,
             KeySize = It.IsAny<int>(),

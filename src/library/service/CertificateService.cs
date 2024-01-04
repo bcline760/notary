@@ -81,7 +81,6 @@ namespace Notary.Service
                 var subject = DistinguishedName.BuildDistinguishedName(request.Subject);
                 var keyUsages = new List<DerObjectIdentifier>();
 
-                //TODO: There has to be a better way to do this...
                 foreach (var ku in request.KeyUsages)
                 {
                     var id = new DerObjectIdentifier(ku);
@@ -110,6 +109,7 @@ namespace Notary.Service
                     Created = DateTime.UtcNow,
                     CreatedBySlug = request.RequestedBySlug,
                     Data = await ConvertX509ToPemAsync(generatedCertificate),
+                    IsCaCertificate = request.IsCaCertificate,
                     Issuer = parentCert == null ? request.Subject : parentCert.Subject,
                     IssuingSlug = request.ParentCertificateSlug,
                     KeyUsages = request.KeyUsages,
@@ -332,6 +332,8 @@ namespace Notary.Service
             await KeyService.SaveAsync(newKey, newKey.UpdatedBySlug);
 
             var keyPair = await KeyService.GetKeyPairAsync(newKey.Slug);
+            if (keyPair == null)
+                throw new ArgumentNullException(nameof(keyPair));
             return keyPair;
         }
 
