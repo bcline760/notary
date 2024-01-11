@@ -1,0 +1,23 @@
+on:
+  pull_request: 
+    branches: 
+        - main
+
+jobs:
+  build:
+    name: Build Notary
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'
+          dotnet-quality: 'ga'
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Restore NuGet Packages
+        run: dotnet restore src/sln/Notary.sln --no-cache --use-current-runtime -v q --nologo
+      - name: Build Notary
+        run: dotnet build src/sln/Notary.sln -c Release --no-restore -v q -o dist/ --nologo
+      - name: Test Notary
+        run: dotnet test src/test/ --nologo -c Release --no-restore --nologo --no-build -v q
