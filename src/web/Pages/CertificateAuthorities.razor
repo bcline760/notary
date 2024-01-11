@@ -1,0 +1,53 @@
+﻿@page "/ca"
+@using Notary
+@using Notary.Contract
+@using Notary.Interface.Service
+@using Notary.Web.ViewModels
+@inject ICertificateAuthorityService CaService
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-5">
+    <MudButton ButtonType="ButtonType.Button" Color="Color.Primary" Variant="Variant.Filled" Href="/ca/create">Create Certificate Authority</MudButton>
+</MudContainer>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-5">
+    @if (CaList.Count > 0)
+    {
+        <MudTable Items="@CaList" Breakpoint="Breakpoint.Sm" Loading="@_isLoading">
+            <HeaderContent>
+                <MudTh>Name</MudTh>
+                <MudTh>Created</MudTh>
+                <MudTh>Expires</MudTh>
+                <MudTh>Key Type</MudTh>
+                <MudTh>&nbsp;</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Name">@context.Name</MudTd>
+                    <MudTd DataLabel="Created">@context.Created</MudTd>
+                    <MudTd DataLabel="NotAfter">@context.NotAfter</MudTd>
+                    <MudTd DataLabel="KeyType">@context.KeyAlgorithm</MudTd>
+                    <MudTh>
+                        <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download" Size="Size.Small" />
+                    </MudTh>
+                </RowTemplate>
+            </MudTable>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info">
+            Looks like no certificate authorities have been created. Create one by clicking "Create Certificate Authority".
+        </MudAlert>
+    }
+</MudContainer>
+@code {
+    private List<CertificateAuthority> CaList { get; set; } = new();
+    private bool _isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isLoading = true;
+        CaList = await CaService.GetAllAsync();
+        _isLoading = false;
+        await base.OnInitializedAsync();
+    }
+}

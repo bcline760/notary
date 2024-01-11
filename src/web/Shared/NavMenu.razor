@@ -1,44 +1,21 @@
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Notary</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
-
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="fa-sharp fa-light fa-house"></span>&nbsp;Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="certificates">
-                <span class="fa-sharp fa-light fa-certificate" aria-hidden="true"></span>&nbsp;Certificate
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="ca">
-                <i class="fa-sharp fa-light fa-bars"></i>&nbsp;Certificate Authority
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="showprofile">
-                <i class="fa-sharp fa-light fa-circle-user"></i>&nbsp;Show profile
-            </NavLink>
-        </div>
-    </nav>
-</div>
+<MudNavMenu>
+    <MudNavLink Href="/" Match="NavLinkMatch.All"><MudIcon Icon="fa-sharp fa-regular fa-home" Size="Size.Small" Class="mr-3" />Home</MudNavLink>
+    <MudNavLink Href="/certificates" Match="NavLinkMatch.Prefix"><MudIcon Icon="fa-sharp fa-regular fa-file-certificate" Size="Size.Small" Class="mr-3" />Certificates</MudNavLink>
+    <MudNavLink Href="/ca" Match="NavLinkMatch.Prefix"><MudIcon Icon="fa-sharp fa-regular fa-building-shield" Size="Size.Small" Class="mr-3" />Certificate Authority</MudNavLink>
+    <AuthorizeView>
+        <Authorized>
+            <MudNavLink Href="/profile" Match="NavLinkMatch.Prefix"><MudIcon Icon="fa-sharp fa-regular fa-circle-user" Size="Size.Small" Class="mr-3" />Show profile</MudNavLink>
+            <MudNavLink Href="MicrosoftIdentity/Account/SignOut" Match="NavLinkMatch.All">
+                <MudIcon Icon="fa-sharp fa-regular fa-person-to-door" Size="Size.Small" Class="mr-3" />Log Out
+            </MudNavLink>
+        </Authorized>
+        <NotAuthorized>
+            <MudNavLink Href="MicrosoftIdentity/Account/SignIn" Match="NavLinkMatch.All">
+                <MudIcon Icon="fa-sharp fa-regular fa-person-to-door" Size="Size.Small" Class="mr-3" />Log In
+            </MudNavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+</MudNavMenu>
 
 @code {
-    private bool collapseNavMenu = true;
-
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
 }

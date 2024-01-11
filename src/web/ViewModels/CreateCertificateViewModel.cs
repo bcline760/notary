@@ -7,11 +7,17 @@ namespace Notary.Web.ViewModels
 {
     public class CreateCertificateViewModel
     {
+        private string? _caSlug;
+
         public CreateCertificateViewModel()
         {
-            CertificateAuthoritySlug = string.Empty;
-            SelectedKeyUsages = new List<string>();
             Name = string.Empty;
+            AdditionalSubjectExpanded = false;
+            CertificateAuthoritySlug = "self"; //Default to "self signed"
+            Curve = EllipticCurve.P256;
+            KeyAlgorithm = Algorithm.RSA;
+            KeySize = 2048;
+            SelectedKeyUsages = new List<string>();
             Subject = new DistinguishedName();
             SubjectAlternativeNames = new List<SubjectAlternativeName>();
 
@@ -29,25 +35,49 @@ namespace Notary.Web.ViewModels
                 {"1.3.6.1.4.1.311.20.2.2","SMART Card Login"},
                 {"1.3.6.1.1.1.1.22","MAC Address"}
             };
+
+            // Default to a typical TLS/SSL certificate
+            SelectedKeyUsages.Add("1.3.6.1.5.5.7.3.1");
+            SelectedKeyUsages.Add("1.3.6.1.5.5.7.3.2");
         }
 
-        public string CertificateAuthoritySlug { get; set; }
+        public bool AdditionalSubjectExpanded { get; set; }
 
-        public EllipticCurve? Curve { get; set; }
+        public string? CertificateAuthoritySlug
+        {
+            get
+            {
+                return _caSlug;
+            }
+            set
+            {
+                _caSlug = value;
+                if (OnCertificateAuthoritySlugChanged != null)
+                {
+                    OnCertificateAuthoritySlugChanged(value);
+                }
+            }
+        }
+
+        public EllipticCurve Curve { get; set; }
 
         /// <summary>
         /// Get or set the expiration length in hours.
         /// </summary>
-        [Required, Range(1, 10, ErrorMessage = "Must be from 1 to 10 years")]
+        [Required]
         public int ExpiryLength { get; set; }
 
         [Required]
         public Algorithm KeyAlgorithm { get; set; }
 
+        public bool KeyAlgorithmExpanded { get; set; }
+
         [Range(2048, 8192, ErrorMessage = "Must have a key size between 2048 and 8192 bits")]
-        public int? KeySize { get; set; }
+        public int KeySize { get; set; }
 
         public Dictionary<string, string> KeyUsages { get; }
+
+        public bool KeyUsageExpanded { get; set; }
 
         public List<string> SelectedKeyUsages { get; }
 
@@ -57,7 +87,10 @@ namespace Notary.Web.ViewModels
         [Required, RegularExpression("[a-zA-Z0-9\\s]+", ErrorMessage = "Only alphanumerics plus spaces allowed")]
         public string Name { get; set; }
 
-        public CertificateAuthority? SelectedCa { get; set; }
+        public CertificateAuthority? SelectedCa
+        {
+            get; set;
+        }
 
         public DistinguishedName Subject { get; }
 
@@ -68,5 +101,7 @@ namespace Notary.Web.ViewModels
         {
             get;
         }
+
+        public event Func<string?, Task> OnCertificateAuthoritySlugChanged;
     }
 }

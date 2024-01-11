@@ -1,7 +1,8 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 
 using Notary.Contract;
-using System.Text;
+
+using System;
 
 namespace Notary.Model
 {
@@ -24,6 +25,8 @@ namespace Notary.Model
             KeyCurve = ca.KeyCurve;
             KeyLength = ca.KeyLength;
             Name = ca.Name;
+            NotAfter = ca.NotAfter;
+            NotBefore = ca.NotBefore;
             ParentCaSlug = ca.ParentCaSlug;
         }
 
@@ -62,6 +65,12 @@ namespace Notary.Model
 
         [BsonElement("name")]
         public string Name { get; set; }
+
+        [BsonElement("not_after")]
+        public DateTime NotAfter { get; set; }
+
+        [BsonElement("not_before")]
+        public DateTime NotBefore { get; set; }
 
         [BsonElement("parent_slug")]
         public string ParentCaSlug { get; set; }

@@ -61,7 +61,6 @@ namespace Notary.Service
                     issuerSn = cert.SerialNumber;
                     issuerDn = DistinguishedName.BuildDistinguishedName(parentCert.Subject);
                 }
-                var notAfter = DateTime.UtcNow.AddHours(request.LengthInHours);
                 var random = GetSecureRandom();
                 var newKey = new AsymmetricKey
                 {
@@ -72,8 +71,8 @@ namespace Notary.Service
                     KeyCurve = request.Curve,
                     KeyLength = request.KeySize,
                     Name = request.Name,
-                    NotAfter = notAfter,
-                    NotBefore = DateTime.UtcNow
+                    NotAfter = request.NotAfter,
+                    NotBefore = request.NotBefore
                 };
 
                 var certificateKeyPair = await GenerateKeyPair(newKey);
@@ -94,7 +93,7 @@ namespace Notary.Service
                     certificateKeyPair,
                     serialNumber,
                     parentCert == null ? DistinguishedName.BuildDistinguishedName(request.Subject) : DistinguishedName.BuildDistinguishedName(parentCert.Subject),
-                    notAfter,
+                    request.NotAfter,
                     parentCert == null ? certificateKeyPair : issuerKeyPair,
                     issuerSn,
                     false,
@@ -115,8 +114,8 @@ namespace Notary.Service
                     KeyUsages = request.KeyUsages,
                     KeySlug = newKey.Slug,
                     Name = request.Name,
-                    NotAfter = notAfter,
-                    NotBefore = DateTime.UtcNow,
+                    NotAfter = request.NotAfter,
+                    NotBefore = request.NotBefore,
                     SerialNumber = generatedCertificate.SerialNumber.ToString(16),
                     Subject = request.Subject,
                     SignatureAlgorithm = generatedCertificate.SigAlgName,
@@ -156,7 +155,7 @@ namespace Notary.Service
                     certificateBinary = Encoding.Default.GetBytes(certificate.Data);
                     break;
                 case CertificateFormat.Pkcs12:
-                    var certKey = await KeyService.GetKeyPairAsync(slug);
+                    var certKey = await KeyService.GetKeyPairAsync(certificate.KeySlug);
                     var store = new Pkcs12StoreBuilder().Build();
                     var certEntry = new X509CertificateEntry(cert);
                     var keyEntry = new AsymmetricKeyEntry(certKey.Private);

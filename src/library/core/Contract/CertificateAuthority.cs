@@ -47,6 +47,8 @@ namespace Notary.Contract
             KeyCurve = model.KeyCurve;
             KeyLength = model.KeyLength;
             Name = model.Name;
+            NotAfter = model.NotAfter;
+            NotBefore = model.NotBefore;
             ParentCaSlug = model.ParentCaSlug;
         }
 
@@ -87,10 +89,13 @@ namespace Notary.Contract
         public int? KeyLength { get; set; }
 
         [DataMember]
-        public int LengthInYears { get; set; }
+        public string Name { get; set; }
 
         [DataMember]
-        public string Name { get; set; }
+        public DateTime NotAfter { get; set; }
+
+        [DataMember]
+        public DateTime NotBefore { get; set; }
 
         [DataMember]
         public string ParentCaSlug { get; set; }

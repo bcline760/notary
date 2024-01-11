@@ -1,0 +1,89 @@
+﻿@using Notary
+@using Notary.Contract
+@using Notary.Interface.Service
+@using Notary.Web.ViewModels
+@using System.Text.RegularExpressions
+@inject IJSRuntime JS
+@inject IDialogService Dialog
+@inject ICertificateService CertificateService
+
+<MudDialog>
+    <TitleContent>
+        <MudIcon Icon="fa-sharp fa-regular fa-download" Class="mr-3" />Download Certificate
+    </TitleContent>
+    <DialogContent>
+        <MudForm Model="ViewModel" @ref="_form" @bind-IsValid="_isValid" @bind-Errors="_errors">
+            <MudText Typo="Typo.body2">Format</MudText>
+            <MudRadioGroup @bind-Value="@ViewModel.Format" T="CertificateFormat">
+                <MudRadio Value="CertificateFormat.Der">DER</MudRadio>
+                <MudRadio Value="CertificateFormat.Pem">PEM</MudRadio>
+                <MudRadio Value="CertificateFormat.Pkcs12">PKCS #12</MudRadio>
+            </MudRadioGroup>
+            <MudDivider />
+            <MudTextField @bind-Value="ViewModel.Password" Label="Password" InputType="InputType.Password" Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))"
+                          HelperText="Private Key Password" Disabled="ViewModel.Format!=CertificateFormat.Pkcs12" />
+            <MudTextField @bind-Value="ViewModel.ConfirmPassword" InputType="InputType.Password" Label="Confirm Password" Validation="@(new Func<string, string>(PasswordMatch))"
+                          HelperText="Confirm Password" Disabled="ViewModel.Format!=CertificateFormat.Pkcs12" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Secondary" OnClick="OnCancel" Variant="Variant.Filled">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="OnOk" Variant="Variant.Filled">OK</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
+
+    private DownloadCertificateViewModel ViewModel { get; set; } = new();
+    private MudForm _form;
+    private bool _isValid = false;
+    private string[] _errors = { };
+
+    private CertificateFormat _format;
+    private string? _certificatePassword;
+    private string? _confirmPassword;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    private void OnCancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private void OnOk()
+    {
+        _form.Validate();
+        if (_isValid)
+            MudDialog.Close<DownloadCertificateViewModel>(ViewModel);
+    }
+
+    private IEnumerable<string> PasswordStrength(string pw)
+    {
+        if (string.IsNullOrWhiteSpace(pw) && ViewModel.Format == CertificateFormat.Pkcs12)
+        {
+            yield return "Password is required when format is PKCS #12.";
+            yield break;
+        }
+
+        if (pw.Length < 8)
+            yield return "Password must be at least of length 8";
+        if (!Regex.IsMatch(pw, @"[A-Z]"))
+            yield return "Password must contain at least one capital letter";
+        if (!Regex.IsMatch(pw, @"[a-z]"))
+            yield return "Password must contain at least one lowercase letter";
+        if (!Regex.IsMatch(pw, @"[0-9]"))
+            yield return "Password must contain at least one digit";
+    }
+
+    private string PasswordMatch(string pw)
+    {
+        if (ViewModel.Password != pw && ViewModel.Format == CertificateFormat.Pkcs12)
+            return "Passwords must match";
+
+        return null;
+    }
+}

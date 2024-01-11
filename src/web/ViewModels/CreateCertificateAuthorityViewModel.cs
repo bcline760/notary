@@ -7,8 +7,11 @@ namespace Notary.Web.ViewModels
 {
     public class CreateCertificateAuthorityViewModel
     {
+        private string? _caSlug;
+
         public CreateCertificateAuthorityViewModel()
         {
+            CommonName = string.Empty;
             Country = string.Empty;
             Locale = string.Empty;
             Name = string.Empty;
@@ -16,29 +19,50 @@ namespace Notary.Web.ViewModels
             Organization = string.Empty;
             OrganizationalUnit = string.Empty;
             StateProvince = string.Empty;
+
+            CertificateAuthorities = new List<CertificateAuthority>();
+            KeyType = Algorithm.RSA;
+            KeyLength = 2048;
+            Curve = EllipticCurve.P256;
         }
 
-        [Required]
-        public Algorithm Algorithm { get; set; }
+        public string CommonName { get; set; }
 
         public string Country { get; set; }
 
-        public EllipticCurve? Curve { get; set; }
+        public EllipticCurve Curve { get; set; }
 
         [Required]
         public bool IsIssuer { get; set; }
 
-        public int? KeyLength { get; set; }
+        public int KeyLength { get; set; }
 
-        [Required, Range(5, 10, ErrorMessage = "Please enter a valid length of 5-10 years")]
-        public int LengthInYears { get; set; }
+        [Required]
+        public Algorithm KeyType { get; set; }
+
+        [Required]
+        public int LengthInMonths { get; set; }
 
         public string Locale { get; set; }
 
-        [Required, RegularExpression("[a-zA-Z0-9\\s]+", ErrorMessage = "Only alphanumerics plus spaces allowed")]
+        [Required, RegularExpression("[a-zA-Z0-9\\-]+", ErrorMessage = "Only alphanumerics plus dashes allowed")]
         public string Name { get; set; }
 
-        public string ParentCaSlug { get; set; }
+        public string? ParentCaSlug
+        {
+            get
+            {
+                return _caSlug;
+            }
+            set
+            {
+                _caSlug = value;
+                if (OnCertificateAuthoritySlugChanged != null)
+                {
+                    OnCertificateAuthoritySlugChanged(value);
+                }
+            }
+        }
 
         public string Organization { get; set; }
 
@@ -46,8 +70,14 @@ namespace Notary.Web.ViewModels
 
         public string StateProvince { get; set; }
 
-        public List<CertificateAuthority>? CertificateAuthorities { get; set; }
+        public bool AdditionalSubjectExpanded { get; set; }
+
+        public bool KeyAlgorithmExpanded { get; set; }
+
+        public List<CertificateAuthority> CertificateAuthorities { get; set; }
 
         public CertificateAuthority? SelectedCa { get; set; }
+
+        public event Func<string?, Task> OnCertificateAuthoritySlugChanged;
     }
 }

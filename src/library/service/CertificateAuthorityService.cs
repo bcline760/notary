@@ -59,7 +59,7 @@ namespace Notary.Service
                 {
                     "1.3.6.1.5.5.7.3.3" //Code signing
                 },
-                LengthInHours = 8760 * entity.LengthInYears,
+                
                 Name = entity.Name,
                 ParentCertificateSlug = parentCa != null ? parentCa.CertificateSlug : null,
                 RequestedBySlug = entity.CreatedBySlug,

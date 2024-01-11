@@ -25,5 +25,8 @@
   "bugs": {
     "url": "https://github.com/bcline760/notary-api/issues"
   },
-  "homepage": "https://github.com/bcline760/notary-api#readme"
+  "homepage": "https://github.com/bcline760/notary-api#readme",
+  "devDependencies": {
+    "eslint": "^8.56.0"
+  }
 }

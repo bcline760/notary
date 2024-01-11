@@ -123,8 +123,9 @@ public class CertificateServiceTest
             KeyAlgorithm = Algorithm.RSA,
             KeySize = It.IsAny<int>(),
             KeyUsages = It.IsAny<List<string>>(),
-            LengthInHours = It.IsAny<int>(),
             Name = It.IsAny<string>(),
+            NotAfter = It.IsAny<DateTime>(),
+            NotBefore = It.IsAny<DateTime>(),
             RequestedBySlug = It.IsAny<string>(),
             Subject = new DistinguishedName
             {

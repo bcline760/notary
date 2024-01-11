@@ -31,16 +31,16 @@ namespace Notary.Contract
         public List<string> KeyUsages { get; set; }
 
         /// <summary>
-        /// Get or set the expiration length in hours.
-        /// </summary>
-        [DataMember, Required, Range(8760, 87600, ErrorMessage = "Must be from 1 to 10 years")]
-        public int LengthInHours { get; set; }
-
-        /// <summary>
         /// Get or set the display name of the certificate
         /// </summary>
         [DataMember, Required, RegularExpression("[a-zA-Z0-9\\s]+", ErrorMessage = "Only alphanumerics plus spaces allowed")]
         public string Name { get; set; }
+
+        [DataMember]
+        public DateTime NotAfter { get; set; }
+
+        [DataMember]
+        public DateTime NotBefore { get; set; }
 
         [DataMember]
         public string ParentCertificateSlug { get; set; }
