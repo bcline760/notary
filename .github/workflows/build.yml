@@ -20,4 +20,4 @@ jobs:
       - name: Build Notary
         run: dotnet build src/sln/Notary.sln -c Release --no-restore -v q -o dist/ --nologo
       - name: Test Notary
-        run: dotnet test ./src/test/ --nologo -c Release --no-restore --nologo --no-build -v q
+        run: dotnet test ./src/test/ --nologo -v q
