@@ -50,6 +50,7 @@ jobs:
             ${{ secrets.DOCKER_HUB_USER }}/notary-web:latest
             ${{ secrets.DOCKER_HUB_USER }}/notary-web:${{ vars.NOTARY_MAJOR_VERSION }}.${{ vars.NOTARY_MINOR_VERSION }}.${{ github.run_number }}
   tag:
+    needs: [build-api, build-web]
     name: Create Tag in GitHub
     runs-on: ubuntu-latest
     steps:
