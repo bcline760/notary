@@ -21,8 +21,9 @@ jobs:
       - name: Docker Build
         uses: docker/build-push-action@v4
         with:
-          context: ./src/api/
-          file: Dockerfile
+          context: .
+          file: src/api/Dockerfile
+          push: true
           tags: |
             ${{ secrets.DOCKER_HUB_USER }}/notary-api:latest
             ${{ secrets.DOCKER_HUB_USER }}/notary-api:${{ vars.NOTARY_MAJOR_VERSION }}.${{ vars.NOTARY_MINOR_VERSION }}.${{ github.run_number }}
@@ -44,8 +45,9 @@ jobs:
       - name: Docker Build
         uses: docker/build-push-action@v4
         with:
-          context: ./src/web/
-          file: Dockerfile
+          context: .
+          file: src/web/Dockerfile
+          push: true
           tags: |
             ${{ secrets.DOCKER_HUB_USER }}/notary-web:latest
             ${{ secrets.DOCKER_HUB_USER }}/notary-web:${{ vars.NOTARY_MAJOR_VERSION }}.${{ vars.NOTARY_MINOR_VERSION }}.${{ github.run_number }}
