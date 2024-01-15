@@ -63,6 +63,9 @@
 
     private IEnumerable<string> PasswordStrength(string pw)
     {
+        if (string.IsNullOrWhiteSpace(pw) && ViewModel.Format != CertificateFormat.Pkcs12)
+            yield break;
+
         if (string.IsNullOrWhiteSpace(pw) && ViewModel.Format == CertificateFormat.Pkcs12)
         {
             yield return "Password is required when format is PKCS #12.";

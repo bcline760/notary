@@ -7,7 +7,6 @@
     <RuntimeIdentifiers>linux-x64;osx-x64;linux-arm;linux-arm64</RuntimeIdentifiers>
     <UserSecretsId>321e89b6-a152-401c-9ad6-70196fdf4cd2</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <DockerfileContext>..\sln</DockerfileContext>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'https' " />

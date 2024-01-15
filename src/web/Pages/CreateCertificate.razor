@@ -52,6 +52,22 @@
         </MudCollapse>
         <MudDivider Class="my-3" />
         <MudLink OnClick="OnSanDialogOpenClick">Subject Alternative Names</MudLink>
+        <MudGrid Spacing="1" Class="my-2">
+            @foreach (var san in ViewModel.SubjectAlternativeNames)
+            {
+                <MudItem xs="4">
+                    @san.Name
+                </MudItem>
+                <MudItem xs="4">
+                    @san.Kind
+                </MudItem>
+                <MudItem xs="4">
+                    <MudLink Color="Color.Error" OnClick="@(()=>OnSanDialogDeleteClick(san))" Typo="Typo.inherit">
+                        <i class="fa-sharp fa-solid fa-trash"></i>
+                    </MudLink>
+                </MudItem>
+            }
+        </MudGrid>
         <MudDivider Class="my-3" />
         <MudLink OnClick="@(()=>ViewModel.KeyAlgorithmExpanded=!ViewModel.KeyAlgorithmExpanded)">Private Key Algorithm</MudLink>
         <MudCollapse Expanded="ViewModel.KeyAlgorithmExpanded">
@@ -107,21 +123,6 @@
             <MudSelectItem Value="@(SanKind.Uri)">URI</MudSelectItem>
             <MudSelectItem Value="@(SanKind.UserPrincipal)">User Principal</MudSelectItem>
         </MudSelect>
-        <MudButton Color="Color.Primary" OnClick="OnSanDialogAddSanClick" Size="Size.Small">Add</MudButton>
-        <MudGrid Spacing="1">
-            @foreach (var san in ViewModel.SubjectAlternativeNames)
-            {
-                <MudItem xs="4">
-                    @san.Name
-                </MudItem>
-                <MudItem xs="4">
-                    @san.Kind
-                </MudItem>
-                <MudItem xs="4">
-                    <MudFab Color="Color.Error" StartIcon="fa-sharp fa-solid fa-trash" Size="Size.Medium" OnClick="@(()=>OnSanDialogDeleteClick(san))" />
-                </MudItem>
-            }
-        </MudGrid>
     </DialogContent>
     <DialogActions>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OnSanDialogCloseClick">OK</MudButton>
@@ -207,14 +208,7 @@
 
     private void OnSanDialogOpenClick() => _sanDialogVisible = true;
 
-    private void OnSanDialogCloseClick() => _sanDialogVisible = false;
-
-    private void OnSanDialogDeleteClick(C.SubjectAlternativeName san)
-    {
-        ViewModel.SubjectAlternativeNames.Remove(san);
-    }
-
-    private void OnSanDialogAddSanClick()
+    private void OnSanDialogCloseClick()
     {
         var san = new C.SubjectAlternativeName
             {
@@ -222,9 +216,17 @@
                 Name = _sanText
             };
         ViewModel.SubjectAlternativeNames.Add(san);
+
+        _sanText = string.Empty;
+        _sanKind = SanKind.Dns;
+        _sanDialogVisible = false;
     }
 
 
+    private void OnSanDialogDeleteClick(C.SubjectAlternativeName san)
+    {
+        ViewModel.SubjectAlternativeNames.Remove(san);
+    }
 
     private async Task OnSubmitAsync()
     {
@@ -244,7 +246,8 @@
                 Name = ViewModel.Name,
                 NotAfter = notAfter,
                 NotBefore = notBefore,
-                Subject = ViewModel.Subject
+                Subject = ViewModel.Subject,
+                SubjectAlternativeNames = ViewModel.SubjectAlternativeNames
             };
 
         if (ViewModel.KeyAlgorithm == Algorithm.RSA)
@@ -259,10 +262,6 @@
         {
             NavigationManager.NavigateTo("certificates");
         }
-    }
-
-    private void OnRemoveSanClick(C.SubjectAlternativeName san)
-    {
     }
 
     private IEnumerable<string> ValidateExpiration(int months)
