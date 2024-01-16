@@ -4,7 +4,7 @@ on:
 
 jobs:
   build-api:
-    name: Docker Build Web
+    name: Docker Build API
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
