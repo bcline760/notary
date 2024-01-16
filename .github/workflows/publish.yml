@@ -22,7 +22,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./src
-          file: Dockerfile-api
+          file: ./src/Dockerfile-api
           push: true
           tags: |
             ${{ secrets.DOCKER_HUB_USER }}/notary-api:latest
@@ -46,7 +46,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./src
-          file: Dockerfile-web
+          file: ./src/Dockerfile-web
           push: true
           tags: |
             ${{ secrets.DOCKER_HUB_USER }}/notary-web:latest
