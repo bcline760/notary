@@ -22,7 +22,7 @@ RUN dotnet build "./Notary.Web.csproj" -c $BUILD_CONFIGURATION -o /app/build --n
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
 ARG TARGETARCH
-RUN dotnet publish "./Notary.Web.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false --nologo --no-restore --no-build -a ${TARGETARCH}
+RUN dotnet publish "./Notary.Web.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false --nologo --no-restore -a ${TARGETARCH}
 
 FROM base AS final
 ENV AzureAd__Domain ""
