@@ -6,6 +6,7 @@
     <UserSecretsId>aspnet-web-2f00fce2-0432-4e73-a89a-0aba0c91b909</UserSecretsId>
     <WebProject_DirectoryAccessLevelKey>0</WebProject_DirectoryAccessLevelKey>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <Platforms>AnyCPU;ARM64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
