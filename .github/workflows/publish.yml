@@ -21,8 +21,8 @@ jobs:
       - name: Docker Build
         uses: docker/build-push-action@v4
         with:
-          context: .
-          file: src/Dockerfile-api
+          context: ./src
+          file: Dockerfile-api
           push: true
           tags: |
             ${{ secrets.DOCKER_HUB_USER }}/notary-api:latest
@@ -45,8 +45,8 @@ jobs:
       - name: Docker Build
         uses: docker/build-push-action@v4
         with:
-          context: .
-          file: src/Dockerfile-web
+          context: ./src
+          file: Dockerfile-web
           push: true
           tags: |
             ${{ secrets.DOCKER_HUB_USER }}/notary-web:latest
