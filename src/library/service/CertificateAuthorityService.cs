@@ -47,8 +47,6 @@ namespace Notary.Service
                 entity.ParentCaSlug = parentCa.Slug;
             }
 
-            var now = DateTime.UtcNow;
-
             var caRequest = new CertificateRequest
             {
                 Curve = entity.KeyCurve,
@@ -59,8 +57,10 @@ namespace Notary.Service
                 {
                     "1.3.6.1.5.5.7.3.3" //Code signing
                 },
-                
+
                 Name = entity.Name,
+                NotAfter = entity.NotAfter,
+                NotBefore = entity.NotBefore,
                 ParentCertificateSlug = parentCa != null ? parentCa.CertificateSlug : null,
                 RequestedBySlug = entity.CreatedBySlug,
                 Subject = entity.DistinguishedName

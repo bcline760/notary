@@ -16,15 +16,8 @@ namespace Notary.Data
             builder.Register(r =>
             {
                 var config = r.Resolve<NotaryConfiguration>();
-                var connectionString = config.Database.ConnectionString;
-
-                var settings = MongoClientSettings.FromUrl(MongoUrl.Create(connectionString));
-
-                if (!string.IsNullOrEmpty(config.Database.DatabaseName) && !string.IsNullOrEmpty(config.Database.Username))
-                {
-                    var credential = MongoCredential.CreateCredential("admin", config.Database.Username, config.Database.Password);
-                    settings.Credential = credential;
-                }
+                var settings = MongoClientSettings.FromConnectionString(config.Database.ConnectionString);
+                settings.ServerApi = new ServerApi(ServerApiVersion.V1);
 
                 IMongoClient client = new MongoClient(settings);
                 IMongoDatabase db = client.GetDatabase(config.Database.DatabaseName);

@@ -149,7 +149,7 @@
                 Updated = now,
                 DistinguishedName = new C.DistinguishedName
                 {
-                    CommonName = ViewModel.Name,
+                    CommonName = ViewModel.CommonName,
                     Country = ViewModel.SelectedCa != null ? ViewModel.SelectedCa.DistinguishedName.Country : ViewModel.Country,
                     Locale = ViewModel.SelectedCa != null ? ViewModel.SelectedCa.DistinguishedName.Locale : ViewModel.Locale,
                     Organization = ViewModel.SelectedCa != null ? ViewModel.SelectedCa.DistinguishedName.Organization : ViewModel.Organization,

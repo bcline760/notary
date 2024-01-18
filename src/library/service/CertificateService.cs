@@ -83,6 +83,7 @@ namespace Notary.Service
                 foreach (var ku in request.KeyUsages)
                 {
                     var id = new DerObjectIdentifier(ku);
+                    keyUsages.Add(id);
                 }
                 //Generate the certificate
                 var generatedCertificate = GenerateCertificate(
@@ -96,7 +97,7 @@ namespace Notary.Service
                     request.NotAfter,
                     parentCert == null ? certificateKeyPair : issuerKeyPair,
                     issuerSn,
-                    false,
+                    request.IsCaCertificate,
                     keyUsages.ToArray()
                 );
 
@@ -264,7 +265,7 @@ namespace Notary.Service
                         generalName = GeneralName.DnsName;
                         break;
                     case SanKind.Email:
-                        generalName = GeneralName.X400Address;
+                        generalName = GeneralName.Rfc822Name;
                         break;
                     case SanKind.IpAddress:
                         generalName = GeneralName.IPAddress;

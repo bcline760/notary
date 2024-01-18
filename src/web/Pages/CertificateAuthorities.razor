@@ -3,7 +3,10 @@
 @using Notary.Contract
 @using Notary.Interface.Service
 @using Notary.Web.ViewModels
+@inject IJSRuntime JS
+@inject IDialogService Dialog
 @inject ICertificateAuthorityService CaService
+@inject ICertificateService CertificateService
 @inject NavigationManager NavigationManager
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-5">
@@ -27,7 +30,7 @@
                     <MudTd DataLabel="NotAfter">@context.NotAfter</MudTd>
                     <MudTd DataLabel="KeyType">@context.KeyAlgorithm</MudTd>
                     <MudTh>
-                        <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download" Size="Size.Small" />
+                        <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download" Size="Size.Small" OnClick="@(()=>OnCertificateDownloadClick(context.CertificateSlug))" />
                     </MudTh>
                 </RowTemplate>
             </MudTable>
@@ -41,6 +44,7 @@
 </MudContainer>
 @code {
     private List<CertificateAuthority> CaList { get; set; } = new();
+    private DownloadCertificateViewModel DownloadModel { get; set; } = new();
     private bool _isLoading;
 
     protected override async Task OnInitializedAsync()
@@ -49,5 +53,42 @@
         CaList = await CaService.GetAllAsync();
         _isLoading = false;
         await base.OnInitializedAsync();
+    }
+
+    private async Task OnCertificateDownloadClick(string slug)
+    {
+        var dialog = await Dialog.ShowAsync<DownloadCertificateDialog>("Download Certificate");
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var downloadParams = result.Data as DownloadCertificateViewModel;
+            if (downloadParams == null)
+                throw new InvalidCastException("Unable to convert dialog data");
+
+            var cert = await CertificateService.GetAsync(slug);
+            string fileName = string.Empty;
+            var certBinary = await CertificateService.RequestCertificateAsync(slug, downloadParams.Format, downloadParams.Password);
+            switch (downloadParams.Format)
+            {
+                case CertificateFormat.Der:
+                    fileName = $"{cert.Name}.cer";
+                    break;
+                case CertificateFormat.Pkcs12:
+                    fileName = $"{cert.Name}.pfx";
+                    break;
+                case CertificateFormat.Pem:
+                    fileName = $"{cert.Name}.pem";
+                    break;
+            }
+            if (certBinary != null)
+            {
+                using (var stream = new MemoryStream(certBinary))
+                {
+                    using var streamRef = new DotNetStreamReference(stream, false);
+                    await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+                }
+            }
+        }
     }
 }
