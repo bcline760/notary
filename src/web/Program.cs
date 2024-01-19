@@ -12,6 +12,8 @@ using MudBlazor.Services;
 using Notary.Configuration;
 using Notary.Service;
 
+using System.Net;
+
 var builder = WebApplication.CreateBuilder(args);
 
 var initialScopes = builder.Configuration["DownstreamApi:Scopes"]?.Split(' ') ?? builder.Configuration["MicrosoftGraph:Scopes"]?.Split(' ');
@@ -30,6 +32,15 @@ builder.Host.ConfigureContainer<ContainerBuilder>(c =>
     c.Register(r => LogManager.GetLogger(typeof(Program))).As<ILog>().SingleInstance();
     RegisterModules.Register(c);
 });
+
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Services.AddHttpsRedirection(a =>
+    {
+        a.HttpsPort = 443;
+        a.RedirectStatusCode = (int)HttpStatusCode.PermanentRedirect;
+    });
+}
 
 // Add services to the container.
 builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
@@ -51,6 +62,7 @@ builder.Services.AddMudServices();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor()
     .AddMicrosoftIdentityConsentHandler();
+
 
 var app = builder.Build();
 
