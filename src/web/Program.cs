@@ -33,15 +33,6 @@ builder.Host.ConfigureContainer<ContainerBuilder>(c =>
     RegisterModules.Register(c);
 });
 
-if (!builder.Environment.IsDevelopment())
-{
-    builder.Services.AddHttpsRedirection(a =>
-    {
-        a.HttpsPort = 443;
-        a.RedirectStatusCode = (int)HttpStatusCode.PermanentRedirect;
-    });
-}
-
 // Add services to the container.
 builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"))
