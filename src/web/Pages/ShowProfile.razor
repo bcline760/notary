@@ -1,44 +1,40 @@
 @page "/showprofile"
+@attribute [Authorize]
+@using Auth0.AspNetCore.Authentication
+@using Auth0.Core
+@using Auth0.Core.Exceptions
 
-@using Microsoft.Identity.Web
-@using Microsoft.Graph
-@inject Microsoft.Graph.GraphServiceClient GraphServiceClient
-@inject MicrosoftIdentityConsentAndConditionalAccessHandler ConsentHandler
+<AuthorizeView>
+    <Authorized>
+        <MudText Typo="Typo.h1" Color="Color.Primary">@context.User.Identity.Name</MudText>
+            <MudDivider Class="ma-3" />
+            <MudText Typo="Typo.h3" Color="Color.Default">Claims</MudText>
+            <MudDivider Class="ma-3" />
+            <MudGrid>
+                @foreach (var claim in context.User.Claims)
+            {
+                <MudItem sm="5">@claim.Type</MudItem>
+                <MudItem sm="1">:</MudItem>
+                <MudItem sm="3">@claim.Value</MudItem>
+            }
+        </MudGrid>
 
-<h1>Me</h1>
-
-<p>This component demonstrates fetching data from a service.</p>
-
-@if (user == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <table class="table table-striped table-condensed" style="font-family: monospace">
-        <tr>
-            <th>Property</th>
-            <th>Value</th>
-        </tr>
-        <tr>
-            <td>Name</td>
-            <td>@user.DisplayName</td>
-        </tr>
-    </table>
-}
+    </Authorized>
+    <NotAuthorized>
+        <MudAlert Severity="Severity.Error" ShowCloseIcon="true" Elevation="25" Variant="Variant.Filled" ContentAlignment="HorizontalAlignment.Center">
+            You should not be here
+        </MudAlert>
+    </NotAuthorized>
+</AuthorizeView>
 
 @code {
-    User? user;
-
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            user = await GraphServiceClient.Me.Request().GetAsync();
         }
-        catch (Exception ex)
+        catch (ApiException ex)
         {
-            ConsentHandler.HandleException(ex);
         }
     }
 }

@@ -1,4 +1,6 @@
 ﻿@page "/ca/create"
+@attribute [Authorize(Roles = "NotaryAdmin")]
+
 @using C=Notary.Contract
 @using Notary.Interface.Service
 @using Notary.Web.ViewModels

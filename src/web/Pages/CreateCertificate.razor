@@ -1,4 +1,6 @@
 ﻿@page "/certificates/create"
+@attribute [Authorize(Roles = "NotaryAdmin,NotaryWriter")]
+
 @using Notary
 @using C=Notary.Contract
 @using Notary.Interface.Service
@@ -133,6 +135,7 @@
     private CreateCertificateViewModel ViewModel { get; set; } = new();
     private IEnumerable<C.CertificateAuthority> caList = new List<C.CertificateAuthority>();
     private MudForm form;
+    private bool _isLoading = true;
     private string _sanText = string.Empty;
     private SanKind _sanKind = SanKind.Dns;
     private bool _sanDialogVisible = false;
@@ -153,6 +156,7 @@
         {
             if (c != null && c != "self")
             {
+                _isLoading = true;
                 ViewModel.SelectedCa = await CertificateAuthorityService.GetAsync(c);
                 ViewModel.Subject.Country = ViewModel.SelectedCa.DistinguishedName.Country;
                 ViewModel.Subject.Locale = ViewModel.SelectedCa.DistinguishedName.Locale;
@@ -167,6 +171,7 @@
                     ViewModel.Curve = ViewModel.SelectedCa.KeyCurve.Value;
                 else
                     throw new InvalidCastException("Invalid values for either key size or key curve");
+                _isLoading = false;
             }
             else
             {
@@ -187,6 +192,7 @@
         caList = caList.Where(ca => ca.IsIssuer);
 
         await base.OnInitializedAsync();
+        _isLoading = false;
     }
 
     private async Task OnCaListChange(string slug)
@@ -194,8 +200,10 @@
         if (slug == null)
             return;
 
+        _isLoading = true;
         ViewModel.CertificateAuthoritySlug = slug;
         ViewModel.SelectedCa = slug == "self" ? null : await CertificateAuthorityService.GetAsync(slug);
+        _isLoading = false;
     }
 
     private async Task OnKeyUsageChange(bool isChecked, string selectedKeyUsage)
@@ -235,6 +243,7 @@
         if (!success)
             return;
 
+        _isLoading = true;
         DateTime notBefore = DateTime.UtcNow;
         DateTime notAfter = DateTime.UtcNow.AddMonths(ViewModel.ExpiryLength);
         TimeSpan ts = notAfter - notBefore;
@@ -258,6 +267,8 @@
         request.ParentCertificateSlug = ViewModel.SelectedCa != null ? ViewModel.SelectedCa.CertificateSlug : null;
 
         var certificate = await CertificateService.IssueCertificateAsync(request);
+        _isLoading = false;
+        StateHasChanged();
         if (certificate != null)
         {
             NavigationManager.NavigateTo("certificates");
