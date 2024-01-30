@@ -129,7 +129,7 @@ const revocatedCertificateSchema = new Schema({
 });
 
 (async () => {
-    const connectionString = `mongodb://${credentials}${args.server}:${port}/${args.database}`;
+    const connectionString = `mongodb+srv://${credentials}${args.server}/${args.database}`;
     console.info(`Connecting to database...`);
     await mongoose.connect(connectionString).catch((e) => console.error(e));
 

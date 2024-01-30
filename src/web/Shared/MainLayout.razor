@@ -1,48 +1,113 @@
-﻿@inherits LayoutComponentBase
+﻿@inject NavigationManager NavigationManager
+@inherits LayoutComponentBase
 
-<MudThemeProvider/>
-<MudDialogProvider/>
-<MudSnackbarProvider/>
+<MudThemeProvider @ref="_themeProvider" @bind-IsDarkMode="_darkMode" />
+<MudDialogProvider />
+<MudSnackbarProvider />
 
 <PageTitle>Notary</PageTitle>
 
 <MudLayout>
-    <MudAppBar Fixed="true">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        <MudText Typo="Typo.h5" Class="ml-3">Notary</MudText>
-        <MudSpacer />
-        <LoginDisplay />
-    </MudAppBar>
-    <MudDrawer @bind-Open="@_drawerOpen">
-        <NavMenu />
-    </MudDrawer>
-    <MudMainContent>
-        @Body
-    </MudMainContent>
+    <AuthorizeView>
+        <Authorized>
+            <MudAppBar Fixed="true">
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+                @* <MudText Typo="Typo.h5" Class="ml-3">Notary</MudText> *@
+                @if (_darkMode)
+                {
+                    <MudImage Alt="Notary Logo" Src="img/notary-logo-wht.png" Height="48" />
+                }
+                else
+                {
+                    <MudImage Alt="Notary Logo" Src="img/notary-logo-blk.png" Height="48" />
+                }
+                <MudSpacer />
+                <LoginDisplay />
+            </MudAppBar>
+            <MudDrawer @bind-Open="@_drawerOpen">
+                <NavMenu />
+            </MudDrawer>
+            <MudMainContent>
+                <MudContainer MaxWidth="MaxWidth.Large">
+                    @Body
+                </MudContainer>
+            </MudMainContent>
+        </Authorized>
+        <NotAuthorized>
+            @if (context.User.Identity.IsAuthenticated == false)
+            {
+                <MudContainer MaxWidth="MaxWidth.Small">
+                    <MudGrid Class="mt-16">
+                        <MudItem xs="12">
+                            <MudPaper Elevation="3" Height="22em">
+                                <MudStack Class="d-flex align-center flex-grow-1 gap-4">
+                                    <MudItem Class="pa-2">
+                                        @if (_darkMode)
+                                        {
+                                            <MudImage Alt="Notary Logo" Src="img/notary-logo-wht.png" />
+                                        }
+                                        else
+                                        {
+                                            <MudImage Alt="Notary Logo" Src="img/notary-logo-blk.png" />
+                                        }
+                                    </MudItem>
+                                    <MudItem Class="pa-3">
+                                        <p>
+                                            Notary is a simple PKI application designed for hobbyists and curious people like me. It's not intended for any kind of
+                                            enterprise quality or usage. There are solutions out there like Venafi or Microsoft Certificate Services that are enterprise-grade.
+                                            The purposes is to a) relieve my boredom, b) learn about PKI, c) have an alternative to mucking about <code>OpenSSL</code>, and d)
+                                            experimenting with front-end technologies.
+                                        </p>
+                                    </MudItem>
+                                    <MudItem Class="pa-1">
+                                        <MudButton Variant="Variant.Filled" OnClick="@(()=>OnLoginClick())"
+                                                   StartIcon="fa-sharp fa-regular fa-right-to-bracket"
+                                                   Color="Color.Primary" Size="Size.Large">Log In</MudButton>
+                                    </MudItem>
+                                </MudStack>
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+                </MudContainer>
+            }
+            else
+            {
+                <UnauthorizedView />
+            }
+        </NotAuthorized>
+    </AuthorizeView>
+
 </MudLayout>
 
 @code {
     bool _drawerOpen = true;
+    bool _darkMode = false;
+    private MudThemeProvider? _themeProvider;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _themeProvider != null)
+        {
+            _darkMode = await _themeProvider.GetSystemPreference();
+            await _themeProvider.WatchSystemPreference(OnSystemPreferenceChanged);
+            StateHasChanged();
+        }
+    }
+
+    private void OnLoginClick()
+    {
+        NavigationManager.NavigateTo("Authenticate/Login", new NavigationOptions { ForceLoad = true, ReplaceHistoryEntry = true });
+    }
+
+    private Task OnSystemPreferenceChanged(bool newValue)
+    {
+        _darkMode = newValue;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
 
     void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
     }
 }
-
-@* <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
-
-    <main>
-        <div class="top-row px-4 auth">
-            <LoginDisplay />
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div> *@

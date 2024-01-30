@@ -1,0 +1,43 @@
+﻿@inject IHttpContextAccessor Context
+@inject NavigationManager NavigationManager
+@inherits LayoutComponentBase
+
+<MudThemeProvider @ref="_themeProvider" @bind-IsDarkMode="_darkMode" />
+<MudSnackbarProvider />
+
+<MudAlert Elevation="25" ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Error">
+    Status Code: @_httpStatusCode
+    @Body
+</MudAlert>
+
+@code {
+    private int _httpStatusCode;
+    bool _darkMode = false;
+    private MudThemeProvider? _themeProvider;
+
+    protected override Task OnInitializedAsync()
+    {
+        if (Context.HttpContext == null)
+            throw new InvalidOperationException("HTTP Context is somehow null");
+
+        _httpStatusCode = Context.HttpContext.Response.StatusCode;
+        return base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _themeProvider != null)
+        {
+            _darkMode = await _themeProvider.GetSystemPreference();
+            await _themeProvider.WatchSystemPreference(OnSystemPreferenceChanged);
+            StateHasChanged();
+        }
+    }
+
+    private Task OnSystemPreferenceChanged(bool newValue)
+    {
+        _darkMode = newValue;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+}

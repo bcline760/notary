@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Autofac;
-using log4net;
-using Notary.Configuration;
+﻿using Autofac;
+
 using Notary.Interface.Service;
 using Notary.IOC;
 

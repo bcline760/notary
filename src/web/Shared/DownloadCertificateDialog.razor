@@ -35,6 +35,8 @@
 @code {
     [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
 
+    [Parameter] public string Slug { get; set; }
+
     private DownloadCertificateViewModel ViewModel { get; set; } = new();
     private MudForm _form;
     private bool _isValid = false;
@@ -54,11 +56,44 @@
         MudDialog.Cancel();
     }
 
-    private void OnOk()
+    private async Task OnOk()
     {
-        _form.Validate();
+        await _form.Validate();
+
         if (_isValid)
-            MudDialog.Close<DownloadCertificateViewModel>(ViewModel);
+        {
+            Certificate cert = null;
+            byte[] certBinary = null;
+            string fileName = string.Empty;
+            await Task.Run(async () =>
+            {
+                cert = await CertificateService.GetAsync(Slug);
+                certBinary = await CertificateService.RequestCertificateAsync(Slug, ViewModel.Format, ViewModel.Password);
+            });
+
+
+            switch (ViewModel.Format)
+            {
+                case CertificateFormat.Der:
+                    fileName = $"{cert.Name}.cer";
+                    break;
+                case CertificateFormat.Pkcs12:
+                    fileName = $"{cert.Name}.pfx";
+                    break;
+                case CertificateFormat.Pem:
+                    fileName = $"{cert.Name}.pem";
+                    break;
+            }
+            if (certBinary != null)
+            {
+                using (var stream = new MemoryStream(certBinary))
+                {
+                    using var streamRef = new DotNetStreamReference(stream, false);
+                    await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+                }
+            }
+            MudDialog.Close();
+        }
     }
 
     private IEnumerable<string> PasswordStrength(string pw)

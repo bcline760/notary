@@ -5,7 +5,7 @@ using Org.BouncyCastle.Crypto;
 
 using System.Threading.Tasks;
 
-namespace Notary.Service
+namespace Notary.Interface.Service
 {
     public interface IAsymmetricKeyService : IEntityService<AsymmetricKey>
     {

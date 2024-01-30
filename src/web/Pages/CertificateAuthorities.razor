@@ -1,4 +1,5 @@
 ﻿@page "/ca"
+@attribute [Authorize(Roles = "NotaryAdmin,NotaryWriter,NotaryUser")]
 @using Notary
 @using Notary.Contract
 @using Notary.Interface.Service
@@ -10,7 +11,14 @@
 @inject NavigationManager NavigationManager
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-5">
-    <MudButton ButtonType="ButtonType.Button" Color="Color.Primary" Variant="Variant.Filled" Href="/ca/create">Create Certificate Authority</MudButton>
+    <AuthorizeView Roles="NotaryAdmin">
+        <Authorized>
+            <MudButton ButtonType="ButtonType.Button" Color="Color.Primary" Variant="Variant.Filled" Href="/ca/create">Create Certificate Authority</MudButton>
+        </Authorized>
+        <NotAuthorized>
+            <MudButton ButtonType="ButtonType.Button" Color="Color.Primary" Variant="Variant.Filled" Disabled="true">Create Certificate Authority</MudButton>
+        </NotAuthorized>
+    </AuthorizeView>
 </MudContainer>
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-5">
@@ -57,38 +65,11 @@
 
     private async Task OnCertificateDownloadClick(string slug)
     {
-        var dialog = await Dialog.ShowAsync<DownloadCertificateDialog>("Download Certificate");
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
+        var parameters = new DialogParameters<DownloadCertificateDialog>
         {
-            var downloadParams = result.Data as DownloadCertificateViewModel;
-            if (downloadParams == null)
-                throw new InvalidCastException("Unable to convert dialog data");
-
-            var cert = await CertificateService.GetAsync(slug);
-            string fileName = string.Empty;
-            var certBinary = await CertificateService.RequestCertificateAsync(slug, downloadParams.Format, downloadParams.Password);
-            switch (downloadParams.Format)
-            {
-                case CertificateFormat.Der:
-                    fileName = $"{cert.Name}.cer";
-                    break;
-                case CertificateFormat.Pkcs12:
-                    fileName = $"{cert.Name}.pfx";
-                    break;
-                case CertificateFormat.Pem:
-                    fileName = $"{cert.Name}.pem";
-                    break;
-            }
-            if (certBinary != null)
-            {
-                using (var stream = new MemoryStream(certBinary))
-                {
-                    using var streamRef = new DotNetStreamReference(stream, false);
-                    await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
-                }
-            }
-        }
+            { d=> d.Slug, slug }
+        };
+        var dialog = await Dialog.ShowAsync<DownloadCertificateDialog>("Download Certificate", parameters);
+        var result = await dialog.Result;
     }
 }

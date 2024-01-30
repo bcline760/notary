@@ -49,7 +49,7 @@ namespace Notary.Contract
                 CommonName = model.Subject.CommonName,
                 Country = model.Subject.Country,
                 Locale = model.Subject.Locale,
-                Organization = model.Subject.OrganizationalUnit,
+                Organization = model.Subject.Organization,
                 OrganizationalUnit = model.Subject.OrganizationalUnit,
                 StateProvince = model.Subject.StateProvince
             };
