@@ -9,6 +9,10 @@
 @inject NavigationManager NavigationManager
 
 <MudContainer MaxWidth="MaxWidth.Large">
+    @if (IsLoading)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" Striped="true" Size="Size.Medium" />
+    }
     <MudText Typo="Typo.h4">Create Certificate Authority</MudText>
     <MudDivider Class="mb-3" />
     @if (_formErrors.Length > 0)
@@ -85,6 +89,7 @@
 
 @code {
     private CreateCertificateAuthorityViewModel ViewModel { get; set; } = new();
+    private bool IsLoading { get; set; } = false;
     private bool _formValid = false;
     private string[] _formErrors = { };
     private MudForm _mudForm;
@@ -95,7 +100,13 @@
         {
             if (c != null && c != "nop")
             {
-                ViewModel.SelectedCa = await CertificateAuthorityService.GetAsync(c);
+                IsLoading = true;
+                await Task.Run(async () =>
+                {
+                    ViewModel.SelectedCa = await CertificateAuthorityService.GetAsync(c);
+                });
+                IsLoading = false;
+
                 ViewModel.Country = ViewModel.SelectedCa.DistinguishedName.Country;
                 ViewModel.Locale = ViewModel.SelectedCa.DistinguishedName.Locale;
                 ViewModel.Organization = ViewModel.SelectedCa.DistinguishedName.Organization;
@@ -125,8 +136,12 @@
             }
         };
 
-        ViewModel.CertificateAuthorities = await CertificateAuthorityService.GetAllAsync();
-        await base.OnInitializedAsync();
+        IsLoading = true;
+        await Task.Run(async () =>
+        {
+            ViewModel.CertificateAuthorities = await CertificateAuthorityService.GetAllAsync();
+        });
+        IsLoading = false;
     }
 
     private async Task OnSubmitAsync()
@@ -160,7 +175,12 @@
                 }
             };
 
-        await CertificateAuthorityService.SaveAsync(ca, null);
+        IsLoading = true;
+        await Task.Run(async () =>
+        {
+            await CertificateAuthorityService.SaveAsync(ca, null);
+        });
+        IsLoading = false;
         NavigationManager.NavigateTo("ca");
     }
 

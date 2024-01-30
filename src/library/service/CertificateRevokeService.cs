@@ -61,7 +61,6 @@ namespace Notary.Service
             {
                 var rc = await CertificateService.GetAsync(cert.CertificateSlug);
                 var certificate = GetX509FromPem(rc.Data);
-                const string certType = "issued";
 
                 int reason = -1;
                 switch (cert.Reason)

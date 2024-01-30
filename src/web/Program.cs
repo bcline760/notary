@@ -19,8 +19,6 @@ using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var initialScopes = builder.Configuration["DownstreamApi:Scopes"]?.Split(' ') ?? builder.Configuration["MicrosoftGraph:Scopes"]?.Split(' ');
-
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 var config = builder.Configuration
     .GetSection("Notary")
@@ -45,7 +43,6 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
 
 builder.Services.AddControllers();
-//builder.Services.AddControllersWithViews();
 builder.Services.AddAuth0WebAppAuthentication(o =>
 {
     o.Domain = builder.Configuration["Auth0:Domain"];

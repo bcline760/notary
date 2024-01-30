@@ -6,12 +6,16 @@
 @using Notary.Interface.Service
 @using Notary.Web.ViewModels
 @using Notary.Web.Shared
-@inject IJSRuntime JS
+
 @inject IDialogService Dialog
 @inject ICertificateService CertificateService
 @inject NavigationManager NavigationManager
 
 <PageTitle>Certificates</PageTitle>
+@if (IsLoading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" Striped="true" Size="Size.Medium" />
+}
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-5">
     <AuthorizeView Roles="NotaryAdmin,NotaryWriter">
@@ -34,14 +38,15 @@
             <MudTh>&nbsp;</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
-                <MudTd DataLabel="Expire">@context.NotAfter</MudTd>
-                <MudTd DataLabel="SN">@context.SerialNumber</MudTd>
-                <MudTd DataLabel="CN">@context.Thumbprint</MudTd>
+            <MudTd Class="@(context.RevocationDate.HasValue ? "mud-error-text" : "")" DataLabel="Name">@context.Name</MudTd>
+                <MudTd Class="@(context.RevocationDate.HasValue ? "mud-error-text" : "")" DataLabel="Expire">@context.NotAfter</MudTd>
+                <MudTd Class="@(context.RevocationDate.HasValue ? "mud-error-text" : "")" DataLabel="SN">@context.SerialNumber</MudTd>
+                <MudTd Class="@(context.RevocationDate.HasValue ? "mud-error-text" : "")" DataLabel="CN">@context.Thumbprint</MudTd>
                 <MudTd>
-                    <MudFab Color="Color.Info" StartIcon="@Icons.Material.Filled.Search" Size="Size.Small" />
+                    <MudFab Color="Color.Info" StartIcon="@Icons.Material.Filled.Search" Size="Size.Small" Href="@string.Format("certificate?slug={0}", context.Slug)" />
                     &nbsp;
-                    <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download" OnClick="@(()=>OnCertificateDownloadClick(context.Slug))" Size="Size.Small" />
+                    <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download" Disabled="@context.RevocationDate.HasValue"
+                        OnClick="@(()=>OnCertificateDownloadClick(context.Slug))" Size="Size.Small" />
                 </MudTd>
             </RowTemplate>
             <LoadingContent>
@@ -52,54 +57,27 @@
 
     @code {
     private bool IsLoading { get; set; } = false;
-    private DownloadCertificateViewModel DownloadModel { get; set; } = new();
     private List<Certificate> certificates = new List<Certificate>();
 
     protected override async Task OnInitializedAsync()
     {
         IsLoading = true;
-        certificates = await CertificateService.GetAllAsync();
-        certificates = certificates.Where(c => !c.IsCaCertificate).ToList();
+        await Task.Run(async () =>
+        {
+            certificates = await CertificateService.GetAllAsync();
+            certificates = certificates.Where(c => !c.IsCaCertificate).ToList();
+        });
+
         IsLoading = false;
     }
 
     private async Task OnCertificateDownloadClick(string slug)
     {
-        var dialog = await Dialog.ShowAsync<DownloadCertificateDialog>("Download Certificate");
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
+        var parameters = new DialogParameters<DownloadCertificateDialog>
         {
-            var downloadParams = result.Data as DownloadCertificateViewModel;
-            if (downloadParams == null)
-                throw new InvalidCastException("Unable to convert dialog data");
-
-            IsLoading = true;
-            var cert = await CertificateService.GetAsync(slug);
-            string fileName = string.Empty;
-            var certBinary = await CertificateService.RequestCertificateAsync(slug, downloadParams.Format, downloadParams.Password);
-            IsLoading = false;
-
-            switch (downloadParams.Format)
-            {
-                case CertificateFormat.Der:
-                    fileName = $"{cert.Name}.cer";
-                    break;
-                case CertificateFormat.Pkcs12:
-                    fileName = $"{cert.Name}.pfx";
-                    break;
-                case CertificateFormat.Pem:
-                    fileName = $"{cert.Name}.pem";
-                    break;
-            }
-            if (certBinary != null)
-            {
-                using (var stream = new MemoryStream(certBinary))
-                {
-                    using var streamRef = new DotNetStreamReference(stream, false);
-                    await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
-                }
-            }
-        }
+            { d=> d.Slug, slug }
+        };
+        var dialog = await Dialog.ShowAsync<DownloadCertificateDialog>("Download Certificate", parameters);
+        var result = await dialog.Result;
     }
 }

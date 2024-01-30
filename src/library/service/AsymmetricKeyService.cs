@@ -6,6 +6,7 @@ using log4net;
 
 using Notary.Contract;
 using Notary.Interface.Repository;
+using Notary.Interface.Service;
 using Notary.Configuration;
 
 using Org.BouncyCastle.Asn1.Nist;

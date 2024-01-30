@@ -41,6 +41,20 @@ namespace Notary.Web.ViewModels
             SelectedKeyUsages.Add("1.3.6.1.5.5.7.3.2");
         }
 
+        public void Reset()
+        {
+            SelectedCa = null;
+            Subject.Country = null;
+            Subject.Locale = null;
+            Subject.Organization = null;
+            Subject.OrganizationalUnit = null;
+            Subject.StateProvince = null;
+
+            KeyAlgorithm = Algorithm.RSA;
+            KeySize = 2048;
+            Curve = EllipticCurve.P256;
+        }
+
         public bool AdditionalSubjectExpanded { get; set; }
 
         public string? CertificateAuthoritySlug

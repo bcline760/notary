@@ -29,6 +29,10 @@
         </MudItem>
         <MudDivider Class="mb-3" />
     }
+    @if (_isLoading)
+    {
+        <MudProgressLinear Indeterminate="true" Color="Color.Primary" Striped="true" Size="Size.Medium" />
+    }
     <MudForm Model="@ViewModel" @ref="@form" @bind-IsValid="@success" @bind-Errors="@errors">
         <MudSelect @bind-Value="@ViewModel.CertificateAuthoritySlug" Label="Select CA" HelperText="Select a Certificate Authority" Placeholder="Please Select">
             <MudSelectItem Value="@("self")">Self Signed Certificate</MudSelectItem>
@@ -157,7 +161,12 @@
             if (c != null && c != "self")
             {
                 _isLoading = true;
-                ViewModel.SelectedCa = await CertificateAuthorityService.GetAsync(c);
+                await Task.Run(async () =>
+                {
+                    ViewModel.SelectedCa = await CertificateAuthorityService.GetAsync(c);
+                });
+                _isLoading = false;
+
                 ViewModel.Subject.Country = ViewModel.SelectedCa.DistinguishedName.Country;
                 ViewModel.Subject.Locale = ViewModel.SelectedCa.DistinguishedName.Locale;
                 ViewModel.Subject.Organization = ViewModel.SelectedCa.DistinguishedName.Organization;
@@ -171,27 +180,20 @@
                     ViewModel.Curve = ViewModel.SelectedCa.KeyCurve.Value;
                 else
                     throw new InvalidCastException("Invalid values for either key size or key curve");
-                _isLoading = false;
             }
             else
             {
-                ViewModel.SelectedCa = null;
-                ViewModel.Subject.Country = null;
-                ViewModel.Subject.Locale = null;
-                ViewModel.Subject.Organization = null;
-                ViewModel.Subject.OrganizationalUnit = null;
-                ViewModel.Subject.StateProvince = null;
-
-                ViewModel.KeyAlgorithm = Algorithm.RSA;
-                ViewModel.KeySize = 2048;
-                ViewModel.Curve = EllipticCurve.P256;
+                ViewModel.Reset();
             }
         };
 
-        caList = await CertificateAuthorityService.GetAllAsync();
-        caList = caList.Where(ca => ca.IsIssuer);
+        _isLoading = true;
+        await Task.Run(async () =>
+        {
+            caList = await CertificateAuthorityService.GetAllAsync();
+            caList = caList.Where(ca => ca.IsIssuer);
+        });
 
-        await base.OnInitializedAsync();
         _isLoading = false;
     }
 
@@ -202,7 +204,18 @@
 
         _isLoading = true;
         ViewModel.CertificateAuthoritySlug = slug;
-        ViewModel.SelectedCa = slug == "self" ? null : await CertificateAuthorityService.GetAsync(slug);
+
+        if (slug == "self")
+        {
+            ViewModel.SelectedCa = null;
+        }
+        else
+        {
+            await Task.Run(async () =>
+            {
+                ViewModel.SelectedCa = await CertificateAuthorityService.GetAsync(slug);
+            });
+        }
         _isLoading = false;
     }
 
@@ -243,7 +256,6 @@
         if (!success)
             return;
 
-        _isLoading = true;
         DateTime notBefore = DateTime.UtcNow;
         DateTime notAfter = DateTime.UtcNow.AddMonths(ViewModel.ExpiryLength);
         TimeSpan ts = notAfter - notBefore;
@@ -266,13 +278,10 @@
 
         request.ParentCertificateSlug = ViewModel.SelectedCa != null ? ViewModel.SelectedCa.CertificateSlug : null;
 
-        var certificate = await CertificateService.IssueCertificateAsync(request);
+        _isLoading = true;
+        await Task.Run(async () => await CertificateService.IssueCertificateAsync(request));
         _isLoading = false;
-        StateHasChanged();
-        if (certificate != null)
-        {
-            NavigationManager.NavigateTo("certificates");
-        }
+        NavigationManager.NavigateTo("certificates");
     }
 
     private IEnumerable<string> ValidateExpiration(int months)
