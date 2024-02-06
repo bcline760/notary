@@ -5,6 +5,7 @@ using System.Linq;
 using Notary.Model;
 using Newtonsoft.Json;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace Notary.Contract
 {
@@ -20,11 +21,12 @@ namespace Notary.Contract
 
         public Certificate(CertificateModel model) : base(model)
         {
+            CertificateKeyUsage = model.CertificateKeyUsage;
             Data = model.Data;
             IssuingSlug = model.IssuingSlug;
             IsCaCertificate = model.IsCaCertificate;
             KeySlug = model.KeySlug;
-            KeyUsages = model.KeyUsages;
+            ExtendedKeyUsages = model.ExtendedKeyUsages;
             Name = model.Name;
             NotAfter = model.NotAfter;
             NotBefore = model.NotBefore;
@@ -65,11 +67,20 @@ namespace Notary.Contract
             }
         }
 
+        [JsonProperty("cert_key_usages", Required = Required.Always)]
+        public List<string> CertificateKeyUsage { get; set; }
+
         /// <summary>
         /// Get or set the certificate binary
         /// </summary>
         [JsonProperty("data", Required = Required.Always)]
         public string Data { get; set; }
+
+        [JsonProperty("key_usage", Required = Required.Always)]
+        public List<string> ExtendedKeyUsages
+        {
+            get; set;
+        }
 
         /// <summary>
         /// Get or set whether this certificate is a CA
@@ -91,12 +102,6 @@ namespace Notary.Contract
 
         [JsonProperty("key_slug", Required = Required.Always)]
         public string KeySlug { get; set; }
-
-        [JsonProperty("key_usage", Required = Required.Always)]
-        public List<string> KeyUsages
-        {
-            get; set;
-        }
 
         [JsonProperty("name", Required = Required.Always)]
         public string Name { get; set; }

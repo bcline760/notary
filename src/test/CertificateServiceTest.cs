@@ -53,7 +53,7 @@ public class CertificateServiceTest
                 OrganizationalUnit = It.IsAny<string>(),
                 StateProvince = It.IsAny<string>()
             },
-            KeyUsages = It.IsAny<List<string>>(),
+            ExtendedKeyUsages = It.IsAny<List<string>>(),
             Name = It.IsAny<string>(),
             NotAfter = DateTime.MaxValue,
             NotBefore = DateTime.MinValue,

@@ -129,8 +129,13 @@ const revocatedCertificateSchema = new Schema({
 });
 
 (async () => {
-    const connectionString = `mongodb+srv://${credentials}${args.server}/${args.database}`;
-    console.info(`Connecting to database...`);
+    let connectionString = '';
+    if (args.server == 'localhost') {
+        connectionString = `mongodb://${args.server}:27017/${args.database}`;
+    } else {
+        connectionString = `mongodb+srv://${credentials}${args.server}/${args.database}`;
+    }
+    console.info(`Connecting to database...${connectionString}`);
     await mongoose.connect(connectionString).catch((e) => console.error(e));
 
     const AsymmetricKey = mongoose.model('asymmetricKey', asymmetricKeySchema);

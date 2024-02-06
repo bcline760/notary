@@ -30,6 +30,8 @@ namespace Notary.Web.ViewModels
 
         public string Country { get; set; }
 
+        public string CrlEndpoint { get; set; }
+
         public EllipticCurve Curve { get; set; }
 
         [Required]

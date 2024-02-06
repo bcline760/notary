@@ -32,31 +32,44 @@
     }
 
     <MudForm @ref="_mudForm" Model="ViewModel" @bind-IsValid="_formValid" @bind-Errors="_formErrors">
-        <MudSelect @bind-Value="@ViewModel.ParentCaSlug" Required="true" RequiredError="Select a parent CA or select No Parent"
-                   Label="Select Parent CA" HelperText="Select a Certificate Authority" Placeholder="Please Select">
+        <MudSelect @bind-Value="@ViewModel.ParentCaSlug" Required="true"
+            RequiredError="Select a parent CA or select No Parent" Label="Select Parent CA"
+            HelperText="Select a Certificate Authority" Placeholder="Please Select">
             <MudSelectItem Value="@("nop")">No Parent</MudSelectItem>
             @foreach (var ca in ViewModel.CertificateAuthorities)
             {
                 <MudSelectItem Value="@ca.Slug">@ca.Name</MudSelectItem>
             }
         </MudSelect>
-        <MudTextField @bind-Value="ViewModel.Name" Label="Name" Required="true" Validation="@(new Func<string, IEnumerable<string>>(ValidateName))"></MudTextField>
-        <MudTextField @bind-Value="ViewModel.LengthInMonths" Label="CA Validity" HelperText="Enter the CA validity length in months e.g. 48"
-                      Validation="@(new Func<int, IEnumerable<string>>(ValidateExpiration))"></MudTextField>
+        <MudTextField @bind-Value="ViewModel.Name" Label="Name" Required="true"
+            Validation="@(new Func<string, IEnumerable<string>>(ValidateName))"></MudTextField>
+        <MudTextField @bind-Value="ViewModel.LengthInMonths" Label="CA Validity"
+            HelperText="Enter the CA validity length in months e.g. 48"
+            Validation="@(new Func<int, IEnumerable<string>>(ValidateExpiration))"></MudTextField>
         <MudSwitch @bind-Value="ViewModel.IsIssuer" Label="Is Issuer"></MudSwitch>
+        <MudTextField Required="false" HelperText="The endpoint which contains the CRL"
+            @bind-Value="@ViewModel.CrlEndpoint" Label="CRL Endpoint">
+        </MudTextField>
         <MudTextField @bind-Value="ViewModel.CommonName" Required="true" RequiredError="Please enter a CA Common Name"
-                      HelperText="The Common Name for the CA certificate"></MudTextField>
+            HelperText="The Common Name for the CA certificate"></MudTextField>
         <MudDivider Class="my-3" />
-        <MudLink OnClick="@(() => ViewModel.AdditionalSubjectExpanded = !ViewModel.AdditionalSubjectExpanded)">Additional Properties</MudLink>
+        <MudLink OnClick="@(() => ViewModel.AdditionalSubjectExpanded = !ViewModel.AdditionalSubjectExpanded)">
+            Additional Properties</MudLink>
         <MudCollapse Expanded="ViewModel.AdditionalSubjectExpanded">
-            <MudTextField @bind-Value="@ViewModel.Country" Label="Country" Disabled="ViewModel.SelectedCa!=null"></MudTextField>
-            <MudTextField @bind-Value="@ViewModel.Locale" Label="Locale" Disabled="ViewModel.SelectedCa!=null"></MudTextField>
-            <MudTextField @bind-Value="@ViewModel.Organization" Label="Organization" Disabled="ViewModel.SelectedCa!=null"></MudTextField>
-            <MudTextField @bind-Value="@ViewModel.OrganizationalUnit" Label="Org Unit" Disabled="ViewModel.SelectedCa!=null"></MudTextField>
-            <MudTextField @bind-Value="@ViewModel.StateProvince" Label="State" Disabled="ViewModel.SelectedCa!=null"></MudTextField>
+            <MudTextField @bind-Value="@ViewModel.Country" Label="Country" Disabled="ViewModel.SelectedCa!=null">
+            </MudTextField>
+            <MudTextField @bind-Value="@ViewModel.Locale" Label="Locale" Disabled="ViewModel.SelectedCa!=null">
+            </MudTextField>
+            <MudTextField @bind-Value="@ViewModel.Organization" Label="Organization"
+                Disabled="ViewModel.SelectedCa!=null"></MudTextField>
+            <MudTextField @bind-Value="@ViewModel.OrganizationalUnit" Label="Org Unit"
+                Disabled="ViewModel.SelectedCa!=null"></MudTextField>
+            <MudTextField @bind-Value="@ViewModel.StateProvince" Label="State" Disabled="ViewModel.SelectedCa!=null">
+            </MudTextField>
         </MudCollapse>
         <MudDivider Class="my-3" />
-        <MudLink OnClick="@(()=>ViewModel.KeyAlgorithmExpanded=!ViewModel.KeyAlgorithmExpanded)">Private Key Algorithm</MudLink>
+        <MudLink OnClick="@(()=>ViewModel.KeyAlgorithmExpanded=!ViewModel.KeyAlgorithmExpanded)">Private Key Algorithm
+        </MudLink>
         <MudCollapse Expanded="ViewModel.KeyAlgorithmExpanded">
             <MudRadioGroup @bind-Value="@ViewModel.KeyType" Disabled="ViewModel.SelectedCa!=null">
                 <MudRadio Value="@Algorithm.RSA">RSA</MudRadio>
@@ -82,7 +95,8 @@
             }
         </MudCollapse>
         <div class="d-flex align-center justify-space-between">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="OnSubmitAsync">Submit</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" OnClick="OnSubmitAsync">Submit
+            </MudButton>
         </div>
     </MudForm>
 </MudContainer>
@@ -102,9 +116,9 @@
             {
                 IsLoading = true;
                 await Task.Run(async () =>
-                {
-                    ViewModel.SelectedCa = await CertificateAuthorityService.GetAsync(c);
-                });
+    {
+        ViewModel.SelectedCa = await CertificateAuthorityService.GetAsync(c);
+    });
                 IsLoading = false;
 
                 ViewModel.Country = ViewModel.SelectedCa.DistinguishedName.Country;
@@ -155,6 +169,7 @@
             {
                 Active = true,
                 Created = now,
+                CrlEndpoint = ViewModel.CrlEndpoint,
                 IsIssuer = ViewModel.IsIssuer,
                 KeyAlgorithm = ViewModel.KeyType,
                 KeyCurve = ViewModel.Curve,
@@ -169,9 +184,12 @@
                     CommonName = ViewModel.CommonName,
                     Country = ViewModel.SelectedCa != null ? ViewModel.SelectedCa.DistinguishedName.Country : ViewModel.Country,
                     Locale = ViewModel.SelectedCa != null ? ViewModel.SelectedCa.DistinguishedName.Locale : ViewModel.Locale,
-                    Organization = ViewModel.SelectedCa != null ? ViewModel.SelectedCa.DistinguishedName.Organization : ViewModel.Organization,
-                    OrganizationalUnit = ViewModel.SelectedCa != null ? ViewModel.SelectedCa.DistinguishedName.OrganizationalUnit : ViewModel.OrganizationalUnit,
-                    StateProvince = ViewModel.SelectedCa != null ? ViewModel.SelectedCa.DistinguishedName.StateProvince : ViewModel.StateProvince
+                    Organization = ViewModel.SelectedCa != null ? ViewModel.SelectedCa.DistinguishedName.Organization :
+            ViewModel.Organization,
+                    OrganizationalUnit = ViewModel.SelectedCa != null ? ViewModel.SelectedCa.DistinguishedName.OrganizationalUnit :
+            ViewModel.OrganizationalUnit,
+                    StateProvince = ViewModel.SelectedCa != null ? ViewModel.SelectedCa.DistinguishedName.StateProvince :
+            ViewModel.StateProvince
                 }
             };
 

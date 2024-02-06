@@ -26,14 +26,21 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
 {
-    options.Authority = builder.Configuration["Auth0:ApiAuthority"];
     options.Audience = builder.Configuration["Auth0:Audience"];
+    options.Authority = builder.Configuration["Auth0:Authority"];
 });
 
 builder.Services.AddCors(o =>
 {
-    o.AddPolicy("DebugAllow", b => b.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
-    o.AddPolicy("ProductionCors", b => b.WithMethods("GET", "POST", "PUT", "DELETE"));
+    o.AddPolicy("DebugAllow", b => b.AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowAnyOrigin()
+    );
+
+    o.AddPolicy("ProductionCors", b => b.WithMethods("GET", "POST", "PUT", "DELETE")
+        .WithHeaders(builder.Configuration["Notary:Headers"])
+        .WithOrigins(builder.Configuration["Notary:Origins"])
+    );
 });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
