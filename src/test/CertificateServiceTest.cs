@@ -118,11 +118,13 @@ public class CertificateServiceTest
     {
         return new CertificateRequest
         {
+            CertificateKeyUsageFlags = It.IsAny<IEnumerable<int>>(),
+            CrlEndpoint = It.IsAny<string>(),
             ParentCertificateSlug = It.IsAny<string>(),
             Curve = null,
             KeyAlgorithm = Algorithm.RSA,
             KeySize = It.IsAny<int>(),
-            KeyUsages = It.IsAny<List<string>>(),
+            ExtendedKeyUsages = It.IsAny<List<string>>(),
             Name = It.IsAny<string>(),
             NotAfter = It.IsAny<DateTime>(),
             NotBefore = It.IsAny<DateTime>(),
