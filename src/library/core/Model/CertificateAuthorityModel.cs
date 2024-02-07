@@ -17,6 +17,7 @@ namespace Notary.Model
         public CertificateAuthorityModel(CertificateAuthority ca) : base(ca)
         {
             CertificateSlug = ca.CertificateSlug;
+            CrlEndpoint = ca.CrlEndpoint;
             DistinguishedName = new DistinguishedNameModel(ca.DistinguishedName);
             if (ca.IssuingDn != null)
                 IssuingDn = new DistinguishedNameModel(ca.IssuingDn);
@@ -35,6 +36,12 @@ namespace Notary.Model
         /// </summary>
         [BsonElement("cert_slug")]
         public string CertificateSlug { get; set; }
+
+        /// <summary>
+        /// Endpoint to the CRL
+        /// </summary>
+        [BsonElement("crl_endpoint")]
+        public string CrlEndpoint { get; set; }
 
         [BsonElement("dn")]
         public DistinguishedNameModel DistinguishedName { get; set; }

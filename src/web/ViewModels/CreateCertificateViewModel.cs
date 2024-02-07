@@ -17,11 +17,24 @@ namespace Notary.Web.ViewModels
             Curve = EllipticCurve.P256;
             KeyAlgorithm = Algorithm.RSA;
             KeySize = 2048;
-            SelectedKeyUsages = new List<string>();
+            SelectedExKeyUsages = new HashSet<string>();
             Subject = new DistinguishedName();
             SubjectAlternativeNames = new List<SubjectAlternativeName>();
 
-            KeyUsages = new Dictionary<string, string>
+            CertificateKeyUsages = new Dictionary<int, string>
+            {
+                {1,"Encipher Only"},
+                {2,"CRL Sign"},
+                {4,"Certificate Key Sign"},
+                {8,"Key Agreement"},
+                {16,"Data Encipherment"},
+                {32,"Key Encipherment"},
+                {64,"Non Repudiation"},
+                {128,"Digital Signature"},
+                {32768,"Decipher Only"}
+            };
+
+            ExtendedKeyUsages = new Dictionary<string, string>
             {
                 {"1.3.6.1.5.5.7.3.1","Server Authentication" },
                 {"1.3.6.1.5.5.7.3.2","Client Authentication" },
@@ -37,8 +50,11 @@ namespace Notary.Web.ViewModels
             };
 
             // Default to a typical TLS/SSL certificate
-            SelectedKeyUsages.Add("1.3.6.1.5.5.7.3.1");
-            SelectedKeyUsages.Add("1.3.6.1.5.5.7.3.2");
+            SelectedExKeyUsages = new List<string>()
+            {
+                "1.3.6.1.5.5.7.3.1",
+                "1.3.6.1.5.5.7.3.2"
+            };
         }
 
         public void Reset()
@@ -73,6 +89,8 @@ namespace Notary.Web.ViewModels
             }
         }
 
+        public Dictionary<int, string> CertificateKeyUsages { get; }
+
         public EllipticCurve Curve { get; set; }
 
         /// <summary>
@@ -80,6 +98,8 @@ namespace Notary.Web.ViewModels
         /// </summary>
         [Required]
         public int ExpiryLength { get; set; }
+
+        public Dictionary<string, string> ExtendedKeyUsages { get; }
 
         [Required]
         public Algorithm KeyAlgorithm { get; set; }
@@ -89,11 +109,11 @@ namespace Notary.Web.ViewModels
         [Range(2048, 8192, ErrorMessage = "Must have a key size between 2048 and 8192 bits")]
         public int KeySize { get; set; }
 
-        public Dictionary<string, string> KeyUsages { get; }
-
         public bool KeyUsageExpanded { get; set; }
 
-        public List<string> SelectedKeyUsages { get; }
+        public IEnumerable<int> SelectedCertificateKeyUsage { get; set; }
+
+        public IEnumerable<string> SelectedExKeyUsages { get; set; }
 
         /// <summary>
         /// Get or set the display name of the certificate

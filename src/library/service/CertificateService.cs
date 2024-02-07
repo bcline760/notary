@@ -26,6 +26,7 @@ using Notary.Contract;
 using Notary.Interface.Repository;
 using Notary.Interface.Service;
 using Notary.Logging;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace Notary.Service
 {
@@ -80,11 +81,18 @@ namespace Notary.Service
                 var subject = DistinguishedName.BuildDistinguishedName(request.Subject);
                 var keyUsages = new List<DerObjectIdentifier>();
 
-                foreach (var ku in request.KeyUsages)
+                foreach (var ku in request.ExtendedKeyUsages)
                 {
                     var id = new DerObjectIdentifier(ku);
                     keyUsages.Add(id);
                 }
+
+                int certKeyUsages = 0;
+                foreach (var usages in request.CertificateKeyUsageFlags)
+                {
+                    certKeyUsages |= usages;
+                }
+
                 //Generate the certificate
                 var generatedCertificate = GenerateCertificate(
                     request.SubjectAlternativeNames,
@@ -98,6 +106,8 @@ namespace Notary.Service
                     parentCert == null ? certificateKeyPair : issuerKeyPair,
                     issuerSn,
                     request.IsCaCertificate,
+                    request.CrlEndpoint,
+                    certKeyUsages,
                     keyUsages.ToArray()
                 );
 
@@ -112,7 +122,7 @@ namespace Notary.Service
                     IsCaCertificate = request.IsCaCertificate,
                     Issuer = parentCert == null ? request.Subject : parentCert.Subject,
                     IssuingSlug = request.ParentCertificateSlug,
-                    KeyUsages = request.KeyUsages,
+                    ExtendedKeyUsages = new List<string>(request.ExtendedKeyUsages),
                     KeySlug = newKey.Slug,
                     Name = request.Name,
                     NotAfter = request.NotAfter,
@@ -210,6 +220,31 @@ namespace Notary.Service
         }
 
         /// <summary>
+        /// Add the certificate key usage extension, e.g. Key Encipherment
+        /// </summary>
+        /// <param name="certificateGenerator"></param>
+        /// <param name="usages"></param>
+        private void AddCertificateKeyUsage(X509V3CertificateGenerator certificateGenerator, int keyUsageFlags)
+        {
+            certificateGenerator.AddExtension(X509Extensions.KeyUsage.Id, true, new KeyUsage(keyUsageFlags));
+        }
+
+        private void AddCrlEndpoint(X509V3CertificateGenerator certificateGenerator, string crlEndpoint)
+        {
+            var asn1Names = new Asn1EncodableVector();
+            var gn = new GeneralName(GeneralName.UniformResourceIdentifier, new DerIA5String(crlEndpoint));
+            asn1Names.Add(gn);
+
+            var gns = GeneralNames.GetInstance(new DerSequence(asn1Names));
+            var dpn = new DistributionPointName(DistributionPointName.FullName, gns);
+            var dp = new DistributionPoint(dpn, null, null);
+
+            var crlDistPoint = CrlDistPoint.GetInstance(new DerSequence(dp));
+
+            certificateGenerator.AddExtension(X509Extensions.CrlDistributionPoints, false, crlDistPoint);
+        }
+
+        /// <summary>
         /// Add the "Extended Key Usage" extension, specifying (for example) "server authentication".
         /// </summary>
         /// <param name="certificateGenerator"></param>
@@ -288,7 +323,8 @@ namespace Notary.Service
 
         private X509Certificate GenerateCertificate(List<SubjectAlternativeName> sanList, SecureRandom random, Algorithm alg,
             string subjectDn, AsymmetricCipherKeyPair subjectKeyPair, BigInteger subjectSn, string issuerDn, DateTime notAfter,
-            AsymmetricCipherKeyPair issuerKeyPair, BigInteger issuerSn, bool isCA, IEnumerable<DerObjectIdentifier> usages)
+            AsymmetricCipherKeyPair issuerKeyPair, BigInteger issuerSn, bool isCA, string crlEndpoint, int certificateKeyUsageFlags,
+            IEnumerable<DerObjectIdentifier> usages)
         {
             var certGen = new X509V3CertificateGenerator();
             var subject = new X509Name(subjectDn);
@@ -315,6 +351,10 @@ namespace Notary.Service
             AddAuthorityKeyIdentifier(certGen, issuer, issuerKeyPair, issuerSn);
             AddSubjectKeyIdentifier(certGen, subjectKeyPair);
             AddBasicConstraints(certGen, isCA);
+            AddCertificateKeyUsage(certGen, certificateKeyUsageFlags);
+
+            if (!string.IsNullOrEmpty(crlEndpoint))
+                AddCrlEndpoint(certGen, crlEndpoint);
 
             if (usages != null && usages.Any())
                 AddExtendedKeyUsage(certGen, usages);

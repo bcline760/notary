@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 using log4net;
@@ -9,9 +8,6 @@ using Notary.Configuration;
 using Notary.Contract;
 using Notary.Interface.Repository;
 using Notary.Interface.Service;
-using Notary.Logging;
-
-using Org.BouncyCastle.X509;
 
 namespace Notary.Service
 {
@@ -49,15 +45,25 @@ namespace Notary.Service
 
             var caRequest = new CertificateRequest
             {
+                CertificateKeyUsageFlags = new List<int>{
+                    (int)CertificateKeyUsage.CrlSign,
+                    (int)CertificateKeyUsage.KeyCertSign,
+                    (int)CertificateKeyUsage.DigitalSignature,
+                    (int)CertificateKeyUsage.KeyEncipherment,
+                    (int)CertificateKeyUsage.DataEncipherment
+                },
+                CrlEndpoint = entity.CrlEndpoint,
                 Curve = entity.KeyCurve,
                 IsCaCertificate = true,
                 KeyAlgorithm = entity.KeyAlgorithm,
                 KeySize = entity.KeyLength,
-                KeyUsages = new List<string>
+                ExtendedKeyUsages = new List<string>
                 {
-                    "1.3.6.1.5.5.7.3.3" //Code signing
+                    "1.3.6.1.5.5.7.3.3", // Code signing
+                    "1.3.6.1.5.5.7.3.1", // Server Authentication
+                    "1.3.6.1.5.5.7.3.2", // Client Authentication
+                    "1.3.6.1.4.1.311.20.2.2" //SMART Card Login
                 },
-
                 Name = entity.Name,
                 NotAfter = entity.NotAfter,
                 NotBefore = entity.NotBefore,

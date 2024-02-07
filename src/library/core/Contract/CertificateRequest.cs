@@ -16,6 +16,12 @@ namespace Notary.Contract
         }
 
         [DataMember]
+        public IEnumerable<int> CertificateKeyUsageFlags { get; set; }
+
+        [DataMember]
+        public string CrlEndpoint { get; set; }
+
+        [DataMember]
         public EllipticCurve? Curve { get; set; }
 
         [DataMember, Required]
@@ -28,7 +34,7 @@ namespace Notary.Contract
         public int? KeySize { get; set; }
 
         [DataMember]
-        public List<string> KeyUsages { get; set; }
+        public IEnumerable<string> ExtendedKeyUsages { get; set; }
 
         /// <summary>
         /// Get or set the display name of the certificate

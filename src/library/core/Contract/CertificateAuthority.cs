@@ -42,6 +42,7 @@ namespace Notary.Contract
             };
 
             CertificateSlug = model.CertificateSlug;
+            CrlEndpoint = model.CrlEndpoint;
             IsIssuer = model.IsIssuer;
             KeyAlgorithm = model.KeyAlgorithm;
             KeyCurve = model.KeyCurve;
@@ -59,6 +60,12 @@ namespace Notary.Contract
         public string CertificateSlug { get; set; }
 
         /// <summary>
+        /// Endpoint to the CRL
+        /// </summary>
+        [DataMember]
+        public string CrlEndpoint { get; set; }
+
+        /// <summary>
         /// Get or set the CA distinguished name
         /// </summary>
         [DataMember]
@@ -67,9 +74,15 @@ namespace Notary.Contract
         [DataMember]
         public bool IsIssuer { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
         [DataMember]
         public DistinguishedName IssuingDn { get; set; }
 
+        /// <summary>
+        /// Asymmetric key algorithm
+        /// </summary>
         [DataMember]
         public Algorithm KeyAlgorithm
         {
@@ -88,15 +101,27 @@ namespace Notary.Contract
         [DataMember]
         public int? KeyLength { get; set; }
 
+        /// <summary>
+        /// The name of the certificate authority
+        /// </summary>
         [DataMember]
         public string Name { get; set; }
 
+        /// <summary>
+        /// The CA expiration
+        /// </summary>
         [DataMember]
         public DateTime NotAfter { get; set; }
 
+        /// <summary>
+        /// The CA validity start
+        /// </summary>
         [DataMember]
         public DateTime NotBefore { get; set; }
 
+        /// <summary>
+        /// The parent CA slug
+        /// </summary>
         [DataMember]
         public string ParentCaSlug { get; set; }
 

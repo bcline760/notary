@@ -20,7 +20,7 @@ namespace Notary.Model
             IssuingSlug = contract.IssuingSlug;
             IsCaCertificate = contract.IsCaCertificate;
             KeySlug = contract.KeySlug;
-            KeyUsages = contract.KeyUsages;
+            ExtendedKeyUsages = contract.ExtendedKeyUsages;
             Issuer = new DistinguishedNameModel(contract.Issuer);
             Name = contract.Name;
             NotAfter = contract.NotAfter;
@@ -33,8 +33,14 @@ namespace Notary.Model
             Thumbprint = contract.Thumbprint;
         }
 
+        [BsonElement("cert_key_usages"), BsonRequired]
+        public List<string> CertificateKeyUsage { get; set; }
+
         [BsonElement("data"), BsonRequired]
         public string Data { get; set; }
+
+        [BsonElement("ex_key_usages"), BsonRequired]
+        public List<string> ExtendedKeyUsages { get; set; }
 
         [BsonElement("is_ca"), BsonRequired]
         public bool IsCaCertificate { get; set; }
@@ -44,9 +50,6 @@ namespace Notary.Model
 
         [BsonElement("iss_slug"), BsonRequired]
         public string IssuingSlug { get; set; }
-
-        [BsonElement("key_usage"), BsonRequired]
-        public List<string> KeyUsages { get; set; }
 
         [BsonElement("key_slug"), BsonRequired]
         public string KeySlug { get; set; }
