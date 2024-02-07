@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.ConstrainedExecution;
 using System.Threading.Tasks;
 
 using log4net;
@@ -10,9 +8,6 @@ using Notary.Configuration;
 using Notary.Contract;
 using Notary.Interface.Repository;
 using Notary.Interface.Service;
-using Notary.Logging;
-
-using Org.BouncyCastle.X509;
 
 namespace Notary.Service
 {

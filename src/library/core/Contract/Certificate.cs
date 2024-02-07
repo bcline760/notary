@@ -4,8 +4,6 @@ using System.Linq;
 
 using Notary.Model;
 using Newtonsoft.Json;
-using System.Text;
-using System.Text.Json.Serialization;
 
 namespace Notary.Contract
 {
