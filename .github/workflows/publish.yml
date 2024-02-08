@@ -67,6 +67,6 @@ jobs:
             github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: 'refs/tags/${{ vars.NOTARY_MAJOR_VERSION }}.${{ vars.NOTARY_MINOR_VERSION }}.${{ github.run_number }}',
+              ref: 'refs/tags/v${{ vars.NOTARY_MAJOR_VERSION }}.${{ vars.NOTARY_MINOR_VERSION }}.${{ github.run_number }}',
               sha: context.sha
             })
