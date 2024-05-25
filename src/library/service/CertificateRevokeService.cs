@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 
 namespace Notary.Service
 {
-    internal class CertificateRevokeService : CryptographicEntityService<RevocatedCertificate>, ICertificateRevokeService
+    public class CertificateRevokeService : CryptographicEntityService<RevocatedCertificate>, ICertificateRevokeService
     {
         public CertificateRevokeService(
             IRevocatedCertificateRepository revocatedCertificateRepo,

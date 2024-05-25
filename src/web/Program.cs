@@ -3,6 +3,8 @@ using Auth0.AspNetCore.Authentication;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 
+using Castle.DynamicProxy;
+
 using log4net;
 
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -13,6 +15,7 @@ using Microsoft.Identity.Web.UI;
 using MudBlazor.Services;
 
 using Notary.Configuration;
+using Notary.IOC.Interceptor;
 using Notary.Service;
 
 using System.Net;
@@ -29,7 +32,7 @@ if (config == null)
 builder.Host.ConfigureContainer<ContainerBuilder>(c =>
 {
     c.RegisterInstance(config).SingleInstance();
-
+    c.Register(a => new NotaryAuthorization());
     c.Register(r => LogManager.GetLogger(typeof(Program))).As<ILog>().SingleInstance();
     RegisterModules.Register(c);
 });
@@ -45,6 +48,12 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 builder.Services.AddControllers();
 builder.Services.AddAuth0WebAppAuthentication(o =>
 {
+    if (string.IsNullOrEmpty(builder.Configuration["Auth0:Domain"]) ||
+        string.IsNullOrEmpty(builder.Configuration["Auth0:ClientId"]))
+    {
+        throw new ArgumentNullException();
+    }
+
     o.Domain = builder.Configuration["Auth0:Domain"];
     o.ClientId = builder.Configuration["Auth0:ClientId"];
 });

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
 using Notary.Configuration;
+using Notary.IOC.Interceptor;
 using Notary.Service;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,15 +33,21 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddCors(o =>
 {
-    o.AddPolicy("DebugAllow", b => b.AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowAnyOrigin()
-    );
+    if (builder.Environment.IsDevelopment())
+    {
+        o.AddPolicy("DebugAllow", b => b.AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowAnyOrigin()
+        );
+    }
 
-    o.AddPolicy("ProductionCors", b => b.WithMethods("GET", "POST", "PUT", "DELETE")
-        .WithHeaders(builder.Configuration["Notary:Headers"])
-        .WithOrigins(builder.Configuration["Notary:Origins"])
-    );
+    if (builder.Environment.IsProduction())
+    {
+        o.AddPolicy("ProductionCors", b => b.WithMethods("GET", "POST", "PUT", "DELETE")
+            .WithHeaders(builder.Configuration["Notary:Headers"])
+            .WithOrigins(builder.Configuration["Notary:Origins"])
+        );
+    }
 });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -58,6 +65,7 @@ builder.Host.ConfigureContainer<ContainerBuilder>(c =>
 {
     c.RegisterInstance(config).SingleInstance();
 
+    c.Register(c => new NotaryAuthorization());
     c.Register(r => LogManager.GetLogger(typeof(Program))).As<ILog>().SingleInstance();
     RegisterModules.Register(c);
 });
