@@ -8,6 +8,7 @@ using Notary.Configuration;
 using Notary.Contract;
 using Notary.Interface.Repository;
 using Notary.Interface.Service;
+using Notary.IOC;
 
 namespace Notary.Service
 {
@@ -22,6 +23,7 @@ namespace Notary.Service
             Configuration = config;
         }
 
+        [NotaryAuthorization(Security.NotaryOperation.CertificateAuthorityWrite)]
         public override async Task SaveAsync(CertificateAuthority entity, string updatedBySlug)
         {
             if (entity == null)
@@ -78,6 +80,8 @@ namespace Notary.Service
 
             await base.SaveAsync(entity, updatedBySlug);
         }
+
+        [NotaryAuthorization(Security.NotaryOperation.CertificateAuthorityRead)]
 
         public async Task<List<CaBrief>> GetCaListBrief()
         {

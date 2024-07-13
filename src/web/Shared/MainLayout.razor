@@ -1,4 +1,8 @@
-﻿@inject NavigationManager NavigationManager
+﻿@using Notary.Configuration
+@using Notary.Interface.Service
+@inject NotaryConfiguration Configuration
+@inject NavigationManager NavigationManager
+@inject ILoginService LoginService
 @inherits LayoutComponentBase
 
 <MudThemeProvider @ref="_themeProvider" @bind-IsDarkMode="_darkMode" />
@@ -60,9 +64,16 @@
                                         </p>
                                     </MudItem>
                                     <MudItem Class="pa-1">
-                                        <MudButton Variant="Variant.Filled" OnClick="@(()=>OnLoginClick())"
-                                                   StartIcon="fa-sharp fa-regular fa-right-to-bracket"
-                                                   Color="Color.Primary" Size="Size.Large">Log In</MudButton>
+                                        @if (Configuration.Authentication == AuthenticationProvider.OpenId)
+                                        {
+                                            <MudButton Variant="Variant.Filled" OnClick="@(()=>OnLoginClick())"
+                                                       StartIcon="fa-sharp fa-regular fa-right-to-bracket"
+                                                       Color="Color.Primary" Size="Size.Large">Log In</MudButton>
+                                        }
+                                        else
+                                        {
+
+                                        }
                                     </MudItem>
                                 </MudStack>
                             </MudPaper>
@@ -96,7 +107,12 @@
 
     private void OnLoginClick()
     {
-        NavigationManager.NavigateTo("Authenticate/Login", new NavigationOptions { ForceLoad = true, ReplaceHistoryEntry = true });
+        if (Configuration.Authentication==AuthenticationProvider.OpenId)
+            NavigationManager.NavigateTo("Authenticate/Login", new NavigationOptions { ForceLoad = true, ReplaceHistoryEntry = true });
+        else
+        {
+            
+        }
     }
 
     private Task OnSystemPreferenceChanged(bool newValue)

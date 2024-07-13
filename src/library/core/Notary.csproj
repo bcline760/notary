@@ -38,7 +38,6 @@
     <None Remove="Autofac.Extras.DynamicProxy" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Security\" />
     <Folder Include="IOC\Interceptor\" />
   </ItemGroup>
 </Project>

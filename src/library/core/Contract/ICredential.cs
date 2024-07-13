@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Notary.Contract
 {
-    public interface ICredentials
+    public interface ICredential
     {
         /// <summary>
         /// Get the key value used in credentialling. This can be a username or a service principal account name.

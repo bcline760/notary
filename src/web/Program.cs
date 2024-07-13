@@ -46,17 +46,10 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
 
 builder.Services.AddControllers();
-builder.Services.AddAuth0WebAppAuthentication(o =>
-{
-    if (string.IsNullOrEmpty(builder.Configuration["Auth0:Domain"]) ||
-        string.IsNullOrEmpty(builder.Configuration["Auth0:ClientId"]))
-    {
-        throw new ArgumentNullException();
-    }
 
-    o.Domain = builder.Configuration["Auth0:Domain"];
-    o.ClientId = builder.Configuration["Auth0:ClientId"];
-});
+
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMudServices();

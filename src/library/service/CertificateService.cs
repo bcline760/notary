@@ -14,7 +14,6 @@ using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Crypto.Operators;
 using Org.BouncyCastle.Math;
-using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.Utilities.Encoders;
@@ -26,7 +25,7 @@ using Notary.Contract;
 using Notary.Interface.Repository;
 using Notary.Interface.Service;
 using Notary.Logging;
-using Org.BouncyCastle.Asn1.Ocsp;
+using Notary.IOC;
 
 namespace Notary.Service
 {
@@ -42,6 +41,7 @@ namespace Notary.Service
             KeyService = keyService;
         }
 
+        [NotaryAuthorization(Security.NotaryOperation.CertificateIssue)]
         public async Task<Certificate> IssueCertificateAsync(CertificateRequest request)
         {
             try
@@ -144,6 +144,7 @@ namespace Notary.Service
             }
         }
 
+        [NotaryAuthorization(Security.NotaryOperation.CertificateRead)]
         public async Task<byte[]> RequestCertificateAsync(string slug, CertificateFormat format, string privateKeyPassword)
         {
             var certificate = await GetAsync(slug);
@@ -171,7 +172,7 @@ namespace Notary.Service
                     var certEntry = new X509CertificateEntry(cert);
                     var keyEntry = new AsymmetricKeyEntry(certKey.Private);
 
-                    store.SetKeyEntry(certificate.Subject.ToString(), keyEntry, new X509CertificateEntry[] { certEntry });
+                    store.SetKeyEntry(certificate.Subject.ToString(), keyEntry, [certEntry]);
                     using (var memStream = new MemoryStream())
                     {
                         store.Save(memStream, privateKeyPassword.ToArray(), GetSecureRandom());
@@ -187,6 +188,7 @@ namespace Notary.Service
             return certificateBinary;
         }
 
+        [NotaryAuthorization(Security.NotaryOperation.CertificateRead)]
         public async Task<List<Certificate>> GetCertificatesByCaAsync(string slug)
         {
             var repository = (ICertificateRepository)Repository;
