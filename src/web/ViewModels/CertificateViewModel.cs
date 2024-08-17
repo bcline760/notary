@@ -6,7 +6,6 @@ namespace Notary.Web.ViewModels
     {
         public CertificateViewModel()
         {
-            Issuers = new();
             SerialNumber = string.Empty;
             SignatureAlgorithm = string.Empty;
             Thumbprint = string.Empty;
@@ -22,8 +21,6 @@ namespace Notary.Web.ViewModels
         {
             get; set;
         }
-
-        public HashSet<CertificateIssuerTreeItem> Issuers { get; }
 
         public Algorithm KeyAlgorithm { get; set; }
 

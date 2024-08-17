@@ -13,8 +13,14 @@ namespace Notary.Data.Repository
 {
     public class CertificateRepository : BaseRepository<Certificate, CertificateModel>, ICertificateRepository
     {
-        public CertificateRepository(IMongoDatabase db):base(db)
+        public CertificateRepository(IMongoDatabase db) : base(db)
         {
+            var nameIndex = new CreateIndexModel<CertificateModel>(IndexKeys.Ascending(x => x.Name));
+            var thumbprintIndex = new CreateIndexModel<CertificateModel>(IndexKeys.Ascending(x => x.Thumbprint));
+            var keySlugIndex = new CreateIndexModel<CertificateModel>(IndexKeys.Ascending(x => x.KeySlug));
+            var issuingSlugIndex = new CreateIndexModel<CertificateModel>(IndexKeys.Ascending(x => x.IssuingSlug));
+
+            Task.Run(async () => await Collection.Indexes.CreateManyAsync(new[] { nameIndex, thumbprintIndex, keySlugIndex, issuingSlugIndex }));
         }
 
         public async Task<List<Certificate>> GetCertificatesByCaAsync(string caSlug)
@@ -24,7 +30,7 @@ namespace Notary.Data.Repository
             using (var cursor = await Collection.FindAsync(filter))
             {
                 var certList = await cursor.ToListAsync();
-                return certList.Select(x=>new Certificate(x)).ToList();
+                return certList.Select(x => new Certificate(x)).ToList();
             }
         }
 

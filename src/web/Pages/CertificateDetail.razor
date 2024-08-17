@@ -44,7 +44,7 @@ else if (Model.Subject != null)
             <AuthorizeView Roles="NotaryAdmin,NotaryWriter">
                 <Authorized>
                     <MudIconButton Icon="fa-sharp fa-solid fa-circle-xmark" OnClick="OnRevokeCertificateClick"
-                        Color="Color.Error" Disabled="Model.RevocationDate.HasValue" />
+                                   Color="Color.Error" Disabled="Model.RevocationDate.HasValue" />
                 </Authorized>
                 <NotAuthorized>
                     <MudIconButton Icon="fa-sharp fa-solid fa-circle-xmark" Color="Color.Error" Disabled="true" />
@@ -105,10 +105,10 @@ else if (Model.Subject != null)
     </MudPaper>
     <MudPaper Elevation="25" Class="mt-6">
         <MudText Typo="Typo.h6">Issuer Tree</MudText>
-        <MudTreeView Items="Model.Issuers">
+        <MudTreeView Items="TreeItems">
             <ItemTemplate>
-                <MudTreeViewItem Value="@context" Items="@context.Children"
-                                 Text="@context.Name" CanExpand="true" />
+                <MudTreeViewItem Value="@context.Value" Items="@context.Children"
+                                 Text="@context.Value" CanExpand="true" />
             </ItemTemplate>
         </MudTreeView>
     </MudPaper>
@@ -256,6 +256,7 @@ else
 }
 
 @code {
+    public List<TreeItemData<string>> TreeItems { get; set; } = new();
     protected CertificateViewModel Model { get; } = new();
     protected bool IsLoading { get; set; } = false;
     protected bool NotFound { get; set; } = false;
@@ -323,7 +324,6 @@ else
             Model.RevocationReason = rc.Reason.ToString();
         }
 
-        await Task.Run(async () => await PopulateIssuerTree(c.Slug, Model.Issuers));
         IsLoading = false;
     }
 
@@ -351,19 +351,42 @@ else
         }
     }
 
-    private async Task PopulateIssuerTree(string certificateSlug, HashSet<CertificateIssuerTreeItem> set)
+    private async Task GetIssuingTreeAsync(string certificateSlug)
     {
         var certificate = await CertificateService.GetAsync(certificateSlug);
         if (certificate != null)
         {
-            var caItem = new CertificateIssuerTreeItem
+            var item = new TreeItemData<string>
                 {
-                    Name = certificate.Name,
-                    Slug = certificate.Slug
+                    Value = certificate.Name
                 };
-            set.Add(caItem);
-            if (!string.IsNullOrEmpty(certificate.IssuingSlug))
-                await PopulateIssuerTree(certificate.IssuingSlug, caItem.Children);
+
+            if (certificate.IssuingSlug != string.Empty)
+            {
+                item.Children = new();
+                await PopulateIssuerTree(certificate.IssuingSlug, item.Children);
+            }
+            TreeItems.Add(item);
+        }
+    }
+
+    private async Task PopulateIssuerTree(string slug, List<TreeItemData<string>> children)
+    {
+        var certificate = await CertificateService.GetAsync(slug);
+        if (certificate == null)
+            throw new InvalidDataException("NULL issuer returned");
+
+        var item = new TreeItemData<string>
+            {
+                Value = certificate.Name
+            };
+
+        children.Add(item);
+
+        if (!string.IsNullOrEmpty(certificate.IssuingSlug))
+        {
+            item.Children=new();
+            await PopulateIssuerTree(certificate.IssuingSlug, item.Children);
         }
     }
 }

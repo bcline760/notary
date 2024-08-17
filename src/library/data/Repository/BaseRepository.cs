@@ -18,6 +18,8 @@ namespace Notary.Data.Repository
     {
         public IMongoCollection<TM> Collection { get; private set; }
 
+        public IndexKeysDefinitionBuilder<TM> IndexKeys { get => Builders<TM>.IndexKeys; } 
+
         protected BaseRepository(IMongoDatabase db)
         {
             var type = typeof(TM);
@@ -31,6 +33,9 @@ namespace Notary.Data.Repository
                 string collectionName = GetCollectionName();
                 Collection = db.GetCollection<TM>(collectionName);
             }
+
+            var slugIndex = new CreateIndexModel<TM>(IndexKeys.Ascending(t => t.Slug));
+            Task.Run(async () => await Collection.Indexes.CreateOneAsync(slugIndex));
         }
 
         public virtual async Task DeleteAsync(string slug, string updatedBySlug)
