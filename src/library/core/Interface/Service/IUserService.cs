@@ -19,5 +19,12 @@ namespace Notary.Interface.Service
         /// <param name="email"></param>
         /// <returns></returns>
         Task<User> GetByEmail(string email);
+
+        /// <summary>
+        /// Get a user by their username
+        /// </summary>
+        /// <param name="username">The username to lookup</param>
+        /// <returns>User object matching given username or null if not found</returns>
+        Task<User> GetByUsername(string username);
     }
 }

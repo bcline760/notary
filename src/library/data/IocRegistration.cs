@@ -28,6 +28,7 @@ namespace Notary.Data
             builder.RegisterType<CertificateAuthorityRepository>().As<ICertificateAuthorityRepository>().InstancePerLifetimeScope();
             builder.RegisterType<CertificateRepository>().As<ICertificateRepository>().InstancePerLifetimeScope();
             builder.RegisterType<RevocatedCertificateRepository>().As<IRevocatedCertificateRepository>().InstancePerLifetimeScope();
+            builder.RegisterType<UserRepository>().As<IUserRepository>().InstancePerLifetimeScope();
         }
     }
 }

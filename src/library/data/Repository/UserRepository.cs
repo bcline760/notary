@@ -19,7 +19,18 @@ namespace Notary.Data.Repository
 
         public async Task<User> GetByEmailAsync(string email)
         {
-            throw new NotImplementedException();
+            var filter = Builders<UserModel>.Filter.Eq("email", email);
+            var result = await RunQuery(filter);
+
+            return result;
+        }
+
+        public async Task<User> GetByUsernameAsync(string username)
+        {
+            var filter = Builders<UserModel>.Filter.Eq("username", username);
+            var result = await RunQuery(filter);
+
+            return result;
         }
     }
 }

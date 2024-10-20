@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 
 namespace Notary.Service
 {
-    internal class SystemLoginService : LoginService
+    public class SystemLoginService : LoginService
     {
         public SystemLoginService(IUserService userSvc, NotaryConfiguration config) : base(userSvc)
         {
@@ -32,14 +32,14 @@ namespace Notary.Service
                 throw new ArgumentNullException(nameof(credential));
             }
 
-            var user = await UserService.GetByEmail(credential.Key);
+            var user = await UserService.GetByUsername(credential.Username);
             if (user != null)
             {
                 byte[] salt = user.PasswordSalt;
                 byte[] userPwd = user.Password;
 
                 var pdb = new Pkcs5S2ParametersGenerator(new Sha256Digest());
-                pdb.Init(PbeParametersGenerator.Pkcs5PasswordToBytes(credential.Secret.ToCharArray()), salt, 2048); // TODO: Magic Number
+                pdb.Init(PbeParametersGenerator.Pkcs5PasswordToBytes(credential.Password.ToCharArray()), salt, 2048); // TODO: Magic Number
                 var key = (KeyParameter)pdb.GenerateDerivedMacParameters(128 * 8); // TODO: Magic Number
 
                 byte[] hashedPwd = key.GetKey();

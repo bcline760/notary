@@ -9,9 +9,10 @@ using System.Threading.Tasks;
 
 namespace Notary.Service
 {
-    internal abstract class LoginService : ILoginService
+    public abstract class LoginService : ILoginService
     {
-        protected LoginService(IUserService userSvc) { 
+        protected LoginService(IUserService userSvc)
+        {
             UserService = userSvc;
         }
 

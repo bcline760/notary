@@ -7,10 +7,13 @@ using Castle.DynamicProxy;
 
 using log4net;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
+using Microsoft.IdentityModel.Tokens;
 
 using MudBlazor.Services;
 
@@ -44,11 +47,23 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownNetworks.Clear();
     options.KnownProxies.Clear();
 });
-
 builder.Services.AddControllers();
 
+builder.Services.AddAuthentication(o =>
+{
+    o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    o.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(j =>
+{
+    j.Audience = builder.Configuration["Notary:TokenSettings:Audience"];
+    j.Authority = builder.Configuration["Notary:TokenSettings:Authority"];
+    j.RequireHttpsMetadata = builder.Environment.IsDevelopment();
+    j.SaveToken = true;
 
-builder.Services.AddAuthentication();
+    j.TokenValidationParameters = new TokenValidationParameters
+    {
+    };
+});
 builder.Services.AddAuthorization();
 
 builder.Services.AddHttpContextAccessor();

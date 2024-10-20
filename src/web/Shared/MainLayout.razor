@@ -1,5 +1,10 @@
-﻿@using Notary.Configuration
+﻿@using Microsoft.AspNetCore.Authentication
+@using Notary.Configuration
+@using Notary.Contract
 @using Notary.Interface.Service
+@using Notary.Web.ViewModels
+
+@inject ISnackbar Snackbar
 @inject NotaryConfiguration Configuration
 @inject NavigationManager NavigationManager
 @inject ILoginService LoginService
@@ -16,7 +21,6 @@
         <Authorized>
             <MudAppBar Fixed="true">
                 <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-                @* <MudText Typo="Typo.h5" Class="ml-3">Notary</MudText> *@
                 @if (_darkMode)
                 {
                     <MudImage Alt="Notary Logo" Src="img/notary-logo-wht.png" Height="48" />
@@ -43,7 +47,7 @@
                 <MudContainer MaxWidth="MaxWidth.Small">
                     <MudGrid Class="mt-16">
                         <MudItem xs="12">
-                            <MudPaper Elevation="3" Height="22em">
+                            <MudPaper Elevation="3" Class="pa-4">
                                 <MudStack Class="d-flex align-center flex-grow-1 gap-4">
                                     <MudItem Class="pa-2">
                                         @if (_darkMode)
@@ -63,19 +67,10 @@
                                             experimenting with front-end technologies.
                                         </p>
                                     </MudItem>
-                                    <MudItem Class="pa-1">
-                                        @if (Configuration.Authentication == AuthenticationProvider.OpenId)
-                                        {
-                                            <MudButton Variant="Variant.Filled" OnClick="@(()=>OnLoginClick())"
-                                                       StartIcon="fa-sharp fa-regular fa-right-to-bracket"
-                                                       Color="Color.Primary" Size="Size.Large">Log In</MudButton>
-                                        }
-                                        else
-                                        {
-
-                                        }
-                                    </MudItem>
                                 </MudStack>
+                            </MudPaper>
+                            <MudPaper Elevation="3" Class="pa-4 mt-4">
+                                <Authenticate></Authenticate>
                             </MudPaper>
                         </MudItem>
                     </MudGrid>
@@ -91,8 +86,14 @@
 </MudLayout>
 
 @code {
-    bool _drawerOpen = true;
-    bool _darkMode = false;
+    private bool _drawerOpen = true;
+    private bool _darkMode = false;
+    private bool success;
+    private string[] errors = { };
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
     private MudThemeProvider? _themeProvider;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -102,16 +103,6 @@
             _darkMode = await _themeProvider.GetSystemPreference();
             await _themeProvider.WatchSystemPreference(OnSystemPreferenceChanged);
             StateHasChanged();
-        }
-    }
-
-    private void OnLoginClick()
-    {
-        if (Configuration.Authentication==AuthenticationProvider.OpenId)
-            NavigationManager.NavigateTo("Authenticate/Login", new NavigationOptions { ForceLoad = true, ReplaceHistoryEntry = true });
-        else
-        {
-            
         }
     }
 

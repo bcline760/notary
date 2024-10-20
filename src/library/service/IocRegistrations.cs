@@ -29,6 +29,17 @@ namespace Notary.Service
                 .As<ICertificateService>()
                 .EnableInterfaceInterceptors()
                 .InstancePerLifetimeScope();
+
+            // TODO: Figure out how to use both System and LDAP
+            builder.RegisterType<SystemLoginService>()
+                .As<ILoginService>()
+                .EnableClassInterceptors()
+                .InstancePerLifetimeScope();
+
+            builder.RegisterType<UserService>()
+                .As<IUserService>()
+                .EnableClassInterceptors()
+                .InstancePerLifetimeScope();
         }
     }
 }

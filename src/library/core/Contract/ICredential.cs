@@ -9,12 +9,12 @@ namespace Notary.Contract
         /// <summary>
         /// Get the key value used in credentialling. This can be a username or a service principal account name.
         /// </summary>
-        string Key { get; }
+        string Username { get; }
 
         /// <summary>
         /// Get or secret value that is associated with the secret. This can be a password, a token string, or part of a service principal
         /// </summary>
-        string Secret { get; }
+        string Password { get; }
 
         /// <summary>
         /// Get when the credential will expire.

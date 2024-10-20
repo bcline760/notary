@@ -1,0 +1,53 @@
+﻿@using Microsoft.AspNetCore.Authentication
+@using Notary.Configuration
+@using Notary.Contract
+@using Notary.Interface.Service
+@using Notary.Web.ViewModels
+
+@inject ISnackbar Snackbar
+@inject NotaryConfiguration Configuration
+@inject NavigationManager NavigationManager
+@inject ILoginService LoginService
+
+<MudForm Model="@ViewModel" @ref="@form" @bind-IsValid="@success" @bind-Errors="@errors">
+    <MudTextField Label="Login" @bind-Value="ViewModel.Login" Required="true"></MudTextField>
+    <MudTextField Label="Password" @bind-Value="ViewModel.Password" Required="true" InputType="InputType.Password"></MudTextField>
+    <MudDivider Class="my-3" />
+    <div class="d-flex align-center justify-space-between">
+        <MudCheckBox Label="Persist" @bind-Value="ViewModel.Persist"></MudCheckBox>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                    StartIcon="fa-sharp fa-regular fa-right-to-bracket"
+                    OnClick="@(async () => await OnLoginClick())">
+            Log In
+        </MudButton>
+    </div>
+</MudForm>
+
+
+@code {
+    private MudForm form;
+    private AuthenticateViewModel ViewModel { get; set; } = new();
+    private bool success = false;
+    private string[] errors = { };
+
+    private async Task OnLoginClick()
+    {
+        var credentials = new LoginCredential(ViewModel.Login, ViewModel.Password, ViewModel.Persist);
+        var token = await LoginService.Authenticate(credentials);
+
+        if (token == null)
+        {
+            Snackbar.Clear();
+            Snackbar.Configuration.PositionClass = Defaults.Classes.Position.TopCenter;
+            Snackbar.Add("Invalid credentials", Severity.Error);
+
+            // Reset form
+            ViewModel.Login = string.Empty;
+            ViewModel.Persist = false;
+            ViewModel.Password = string.Empty;
+        }
+        else
+        {
+        }
+    }
+}

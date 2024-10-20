@@ -26,8 +26,22 @@ namespace Notary.Service
             return await repo.GetByEmailAsync(email);
         }
 
+        public async Task<User> GetByUsername(string username)
+        {
+            var repo = Repository as IUserRepository;
+            if (repo == null)
+            {
+                throw new InvalidOperationException("Unable to cast to IUserRepository");
+            }
+
+            return await repo.GetByUsernameAsync(username);
+        }
+
         public override Task SaveAsync(User entity, string updatedBySlug)
         {
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
             return base.SaveAsync(entity, updatedBySlug);
         }
     }
